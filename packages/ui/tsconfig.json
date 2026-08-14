@@ -1,0 +1,9 @@
+{
+  "extends": "@animalesko/config/tsconfig/library.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist", ".turbo"]
+}

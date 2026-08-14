@@ -1,0 +1,38 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+.next/
+out/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# generated
+packages/db/src/generated/
+coverage/
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# vercel
+.vercel
+
+# editors / os
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# The two Lovable prototypes. Kept locally as reference while the port is in
+# progress; each carries its own .git, so committing them would record broken
+# gitlinks rather than files.
+old/

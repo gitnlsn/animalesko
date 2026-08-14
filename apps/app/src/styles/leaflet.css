@@ -1,0 +1,50 @@
+/*
+ * Leaflet overrides.
+ *
+ * Scoped to this file rather than added to the shared token sheet in
+ * `@animalesko/ui`: the map exists on exactly one route, and `apps/plus` has no
+ * business importing Leaflet's cascade.
+ */
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  /* Below the sticky header (z-40) and the bottom nav (z-50); Leaflet's own
+     panes climb to z-index 800 and would otherwise sit over both. */
+  z-index: 0;
+  background: var(--color-muted);
+  font: inherit;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-lg);
+  background: var(--color-popover);
+  color: var(--color-popover-foreground);
+  box-shadow: var(--brand-shadow-lg);
+}
+
+.leaflet-popup-tip {
+  background: var(--color-popover);
+}
+
+.leaflet-popup-content {
+  margin: 0;
+}
+
+/* The emoji pin from `alert-map.tsx`'s divIcon. */
+.animalesko-pin {
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.35));
+}
+
+.leaflet-control-attribution {
+  background: color-mix(in srgb, var(--color-card) 85%, transparent);
+  color: var(--color-muted-foreground);
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-primary);
+}

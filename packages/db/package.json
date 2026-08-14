@@ -1,0 +1,42 @@
+{
+  "name": "@animalesko/db",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/generated/client.ts",
+    "./enums": "./src/generated/enums.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "reset": "prisma migrate reset --force",
+    "seed": "tsx prisma/seed.ts",
+    "studio": "prisma studio",
+    "format": "prisma format",
+    "validate": "prisma validate",
+    "build": "pnpm generate",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "clean": "rm -rf src/generated .turbo node_modules"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "catalog:",
+    "dotenv": "^17.4.2"
+  },
+  "devDependencies": {
+    "@animalesko/config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/pg": "^8.21.0",
+    "better-auth": "catalog:",
+    "eslint": "catalog:",
+    "prisma": "catalog:",
+    "tsx": "^4.23.12",
+    "typescript": "catalog:"
+  }
+}

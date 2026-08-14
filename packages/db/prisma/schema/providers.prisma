@@ -1,0 +1,183 @@
+// ---------------------------------------------------------------------------
+// Supply side — everything apps/plus administers.
+//
+// A provider is always an Organization, even a solo dog walker (type
+// INDEPENDENT). That keeps staff, agenda and offerings uniform instead of
+// branching on "is this a person or a company", and it is what gates access to
+// `plus`: no OrganizationMember row, no provider surface.
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  name        String
+  type        OrganizationType
+  description String?
+  avatarUrl   String?
+  phone       String?
+  email       String?
+
+  addressLine String?
+  city        String?
+  state       String? @db.VarChar(2)
+  postalCode  String?
+  latitude    Float?
+  longitude   Float?
+
+  /// Denormalized from Review. Kept current by the review router so listing
+  /// pages never have to aggregate on read.
+  ratingAvg   Float @default(0)
+  ratingCount Int   @default(0)
+
+  verificationStatus VerificationStatus @default(NOT_SUBMITTED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members          OrganizationMember[]
+  offerings        ServiceOffering[]
+  bookings         Booking[]
+  appointments     Appointment[]
+  clientContacts   ClientContact[]
+  adoptionListings AdoptionListing[]
+  reviews          Review[]
+  conversations    Conversation[]
+  petsInCustody    Pet[]                 @relation("PetCustodian")
+  healthRecords    HealthRecord[]
+  vaccinations     Vaccination[]
+  verification     ProviderVerification?
+
+  @@index([city, state])
+  @@index([type])
+  @@map("organization")
+}
+
+model OrganizationMember {
+  id        String                 @id @default(cuid())
+  role      OrganizationMemberRole @default(STAFF)
+  createdAt DateTime               @default(now())
+
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId])
+  @@index([userId])
+  @@map("organization_member")
+}
+
+/// Document review flow from app/pages/Verification.tsx, moved server-side.
+/// The prototype base64'd files into React state; these are storage URLs.
+model ProviderVerification {
+  id                    String             @id @default(cuid())
+  status                VerificationStatus @default(PENDING)
+  documentUrl           String?
+  addressProofUrl       String?
+  certificatesUrl       String?
+  experienceYears       Int?
+  experienceDescription String?
+  submittedAt           DateTime           @default(now())
+  reviewedAt            DateTime?
+  rejectionReason       String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  orgId String       @unique
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("provider_verification")
+}
+
+/// What a provider sells. Published in `plus`, browsed in `app`.
+model ServiceOffering {
+  id              String      @id @default(cuid())
+  type            ServiceType
+  title           String
+  description     String?
+  /// Integer cents, always. "R$ 45/dia" → priceCents 4500 + PER_DAY.
+  priceCents      Int
+  currency        String      @default("BRL") @db.Char(3)
+  priceUnit       PriceUnit
+  durationMinutes Int?
+  isActive        Boolean     @default(true)
+  tags            String[]    @default([])
+  imageUrl        String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  bookings     Booking[]
+  appointments Appointment[]
+  favorites    FavoriteOffering[]
+
+  @@index([orgId])
+  @@index([type, isActive])
+  @@map("service_offering")
+}
+
+/// A walk-in client of an organization who has no Animalesko account.
+/// This is what plus/AppointmentForm's clientName + phone fields really were.
+/// If they later sign up, `userId` links the two.
+model ClientContact {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  appointments Appointment[]
+
+  @@unique([orgId, phone])
+  @@index([orgId, name])
+  @@map("client_contact")
+}
+
+/// The provider's agenda entry. Created either by the provider directly in
+/// `plus` (walk-in client) or automatically from a consumer Booking made in
+/// `app` — which is the seam that joins the two applications.
+model Appointment {
+  id              String            @id @default(cuid())
+  serviceLabel    String
+  scheduledAt     DateTime
+  durationMinutes Int               @default(60)
+  status          AppointmentStatus @default(PENDING)
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  petId String?
+  pet   Pet?    @relation(fields: [petId], references: [id], onDelete: SetNull)
+
+  tutorId String?
+  tutor   User?   @relation("AppointmentTutor", fields: [tutorId], references: [id], onDelete: SetNull)
+
+  clientContactId String?
+  clientContact   ClientContact? @relation(fields: [clientContactId], references: [id], onDelete: SetNull)
+
+  serviceOfferingId String?
+  serviceOffering   ServiceOffering? @relation(fields: [serviceOfferingId], references: [id], onDelete: SetNull)
+
+  bookingId String?  @unique
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, scheduledAt])
+  @@index([orgId, status])
+  @@index([petId])
+  @@map("appointment")
+}

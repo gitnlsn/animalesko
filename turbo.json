@@ -1,0 +1,71 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalEnv": [
+    "NODE_ENV",
+    "VERCEL",
+    "VERCEL_ENV",
+    "VERCEL_URL",
+    "DATABASE_URL",
+    "DIRECT_DATABASE_URL",
+    "TEST_DATABASE_URL",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "AUTH_COOKIE_DOMAIN",
+    "NEXT_PUBLIC_APP_URL",
+    "NEXT_PUBLIC_PLUS_URL",
+    "BLOB_READ_WRITE_TOKEN"
+  ],
+  "globalDependencies": ["**/.env.*local", "pnpm-workspace.yaml"],
+  "tasks": {
+    "topo": {
+      "dependsOn": ["^topo"]
+    },
+    "generate": {
+      "cache": false,
+      "inputs": ["prisma/schema.prisma", "prisma/schema/**/*.prisma"],
+      "outputs": ["src/generated/**"]
+    },
+    "@animalesko/db#build": {
+      // The db package "builds" by generating the Prisma client, so its cached
+      // artefact is the generated source, not a .next or dist directory.
+      "inputs": ["prisma/schema/**/*.prisma", "prisma.config.ts"],
+      "outputs": ["src/generated/**"]
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "env": [
+        "DATABASE_URL",
+        "DIRECT_DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "NEXT_PUBLIC_APP_URL",
+        "NEXT_PUBLIC_PLUS_URL"
+      ],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^generate"]
+    },
+    "lint": {
+      "dependsOn": ["^topo"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "^generate"]
+    },
+    "test": {
+      "dependsOn": ["^build", "^generate"],
+      "outputs": ["coverage/**"]
+    },
+    "test:integration": {
+      "cache": false,
+      "dependsOn": ["^generate"],
+      "env": ["DATABASE_URL", "TEST_DATABASE_URL"]
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}

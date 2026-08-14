@@ -1,0 +1,125 @@
+// ---------------------------------------------------------------------------
+// Better Auth core models.
+//
+// Field names here are dictated by the Better Auth Prisma adapter — do not
+// rename them. Animalesko-specific columns are grouped at the bottom of User.
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // --- Animalesko profile (from the prototypes' UserProfile / profileData) ---
+  roles      UserRole[] @default([TUTOR])
+  phone      String?
+  bio        String?
+  street     String?
+  city       String?
+  state      String?    @db.VarChar(2)
+  postalCode String?
+
+  // --- Relations: consumer side (apps/app) ---
+  pets                 Pet[]                    @relation("PetOwner")
+  sessions             Session[]
+  accounts             Account[]
+  memberships          OrganizationMember[]
+  bookings             Booking[]                @relation("BookingTutor")
+  adoptionApplications AdoptionApplication[]
+  favoriteListings     FavoriteListing[]
+  favoriteOfferings    FavoriteOffering[]
+  reviewsWritten       Review[]                 @relation("ReviewAuthor")
+  lostPetAlerts        LostPetAlert[]           @relation("AlertReporter")
+  sightingsReported    LostPetSighting[]        @relation("SightingReporter")
+  conversations        ConversationParticipant[]
+  messagesSent         Message[]                @relation("MessageSender")
+  notifications        Notification[]
+  reminders            Reminder[]
+  gamification         GamificationProfile?
+  pointsLedger         PointsLedgerEntry[]
+  badges               UserBadge[]
+  subscription         Subscription?
+
+  // --- Relations: provider side (apps/plus) ---
+  healthRecordsAuthored HealthRecord[]  @relation("HealthRecordAuthor")
+  appointmentsAsTutor   Appointment[]   @relation("AppointmentTutor")
+  clientContactLinks    ClientContact[]
+
+  @@index([city, state])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Set when a `plus` user picks which organization they are acting for.
+  activeOrganizationId String?
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  /// Argon2 hash for the credentials provider. Never leaves the server.
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+/// Premium gate. The `plus` prototype hard-coded "Plano Gratuito — você pode
+/// cadastrar até 1 pet"; that limit now lives in @animalesko/api and reads this.
+model Subscription {
+  id               String             @id @default(cuid())
+  tier             PlanTier           @default(FREE)
+  status           SubscriptionStatus @default(ACTIVE)
+  currentPeriodEnd DateTime?
+  gatewayRef       String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscription")
+}

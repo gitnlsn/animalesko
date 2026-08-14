@@ -1,0 +1,375 @@
+@import "tailwindcss";
+
+/*
+ * Animalesko design tokens — one set, both apps.
+ *
+ * The prototypes had drifted: animalesko-app used semantic CSS variables while
+ * animalesko-plus hardcoded `animalesko-blue` / `animalesko-orange` Tailwind
+ * classes, so the same brand rendered two different palettes. The brand colours
+ * are identical (blue 213 64% 41%, orange 14 84% 55%) — only the plumbing
+ * differed. Everything below is semantic; nothing should reference a raw colour.
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Both apps' sources plus this package, since Tailwind 4 scans from the entry. */
+@source "../../../../apps/*/src/**/*.{ts,tsx}";
+@source "../components/**/*.tsx";
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(213 20% 20%);
+
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(213 20% 20%);
+
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(213 20% 20%);
+
+  /* Brand blue */
+  --primary: hsl(213 64% 41%);
+  --primary-foreground: hsl(0 0% 100%);
+  --primary-light: hsl(213 64% 85%);
+  --primary-dark: hsl(213 64% 31%);
+
+  /* Brand orange */
+  --secondary: hsl(14 84% 55%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --secondary-light: hsl(14 84% 85%);
+
+  --muted: hsl(213 20% 96%);
+  --muted-foreground: hsl(213 10% 40%);
+
+  --accent: hsl(14 84% 55%);
+  --accent-foreground: hsl(0 0% 100%);
+
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  --success: hsl(142 71% 40%);
+  --success-foreground: hsl(0 0% 100%);
+
+  --warning: hsl(38 92% 46%);
+  --warning-foreground: hsl(0 0% 100%);
+
+  --border: hsl(213 25% 90%);
+  --input: hsl(213 25% 90%);
+  --ring: hsl(213 64% 41%);
+
+  --radius: 0.75rem;
+
+  /*
+   * Gradients and brand shadows.
+   *
+   * These carry most of the prototype's visual identity — the header bar, the
+   * hero banner and every card surface are gradients, not flat fills. They are
+   * declared as full `linear-gradient()` / `box-shadow` values rather than
+   * colour stops so `@theme inline` can expose them directly as
+   * `bg-gradient-*` and `shadow-brand-*` utilities.
+   */
+  --gradient-primary: linear-gradient(135deg, hsl(213 64% 41%), hsl(213 64% 51%));
+  --gradient-secondary: linear-gradient(135deg, hsl(14 84% 55%), hsl(14 84% 65%));
+  --gradient-hero: linear-gradient(135deg, hsl(213 64% 41%), hsl(14 84% 55%));
+  --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(213 20% 98%));
+
+  --brand-shadow-sm: 0 2px 4px -1px hsl(213 64% 41% / 0.1);
+  --brand-shadow-md: 0 4px 12px -2px hsl(213 64% 41% / 0.15);
+  --brand-shadow-lg: 0 8px 25px -5px hsl(213 64% 41% / 0.2);
+  --brand-shadow-glow: 0 0 20px hsl(213 64% 41% / 0.3);
+}
+
+.dark {
+  --background: hsl(222 47% 8%);
+  --foreground: hsl(210 40% 98%);
+
+  --card: hsl(222 44% 11%);
+  --card-foreground: hsl(210 40% 98%);
+
+  --popover: hsl(222 44% 11%);
+  --popover-foreground: hsl(210 40% 98%);
+
+  /* Lightened so the brand stays legible on a dark ground. */
+  --primary: hsl(213 74% 62%);
+  --primary-foreground: hsl(222 47% 11%);
+  --primary-light: hsl(213 64% 30%);
+  --primary-dark: hsl(213 74% 72%);
+
+  --secondary: hsl(14 84% 60%);
+  --secondary-foreground: hsl(222 47% 11%);
+  --secondary-light: hsl(14 60% 25%);
+
+  --muted: hsl(217 33% 17%);
+  --muted-foreground: hsl(215 20% 70%);
+
+  --accent: hsl(14 84% 60%);
+  --accent-foreground: hsl(222 47% 11%);
+
+  --destructive: hsl(0 72% 55%);
+  --destructive-foreground: hsl(210 40% 98%);
+
+  --success: hsl(142 65% 48%);
+  --success-foreground: hsl(222 47% 11%);
+
+  --warning: hsl(38 92% 55%);
+  --warning-foreground: hsl(222 47% 11%);
+
+  --border: hsl(217 33% 22%);
+  --input: hsl(217 33% 22%);
+  --ring: hsl(213 74% 62%);
+
+  /*
+   * Re-derived rather than reused: the light gradients run 41% → 51% lightness,
+   * which on a 8%-lightness ground reads as a bright slab instead of a surface.
+   * The card gradient in particular has to stay *near* the card colour — the
+   * prototype's dark mode left it white, which is why its cards glowed.
+   */
+  --gradient-primary: linear-gradient(135deg, hsl(213 64% 30%), hsl(213 64% 38%));
+  --gradient-secondary: linear-gradient(135deg, hsl(14 70% 42%), hsl(14 70% 50%));
+  --gradient-hero: linear-gradient(135deg, hsl(213 64% 32%), hsl(14 70% 44%));
+  --gradient-card: linear-gradient(145deg, hsl(222 44% 13%), hsl(222 44% 10%));
+
+  /* Black rather than brand-tinted: a blue glow is invisible on a blue-black. */
+  --brand-shadow-sm: 0 2px 4px -1px hsl(222 60% 2% / 0.4);
+  --brand-shadow-md: 0 4px 12px -2px hsl(222 60% 2% / 0.5);
+  --brand-shadow-lg: 0 8px 25px -5px hsl(222 60% 2% / 0.6);
+  --brand-shadow-glow: 0 0 20px hsl(213 74% 62% / 0.25);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-light: var(--secondary-light);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* `shadow-brand-md`, … — indirected through `--brand-shadow-*` so the .dark
+     block can swap them. The names cannot match: `--shadow-*` *is* the theme
+     namespace that generates these utilities, so a same-named source variable
+     would be self-referential. */
+  --shadow-brand-sm: var(--brand-shadow-sm);
+  --shadow-brand-md: var(--brand-shadow-md);
+  --shadow-brand-lg: var(--brand-shadow-lg);
+  --shadow-brand-glow: var(--brand-shadow-glow);
+
+  /* The prototype's `transition-smooth` / `transition-bounce` classes, which
+     were `all .3s <easing>`. Split here into a duration and an easing so a
+     component can pick which properties transition. */
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  --animate-accordion-down: accordion-down 0.2s var(--ease-smooth);
+  --animate-accordion-up: accordion-up 0.2s var(--ease-smooth);
+}
+
+/*
+ * Enter / exit animations.
+ *
+ * The `animate-in` / `fade-in` / `slide-in-from-*` vocabulary that Radix
+ * components drive through `data-[state=open]:…`. The prototypes got these from
+ * the `tailwindcss-animate` plugin, which has no Tailwind 4 equivalent that
+ * resolves here: its successor `tw-animate-css` publishes its stylesheet only
+ * behind a `"style"` export condition, which Turbopack's PostCSS resolver does
+ * not honour, so the import fails at build time.
+ *
+ * Rather than depend on a package for eight utilities, they are defined below.
+ * The mechanism is the plugin's: one pair of keyframes reads a set of custom
+ * properties, and each modifier utility sets one of them — so `animate-in
+ * fade-in-0 zoom-in-95 slide-in-from-top-2` composes into a single animation
+ * rather than four fighting ones.
+ */
+@keyframes enter {
+  from {
+    opacity: var(--enter-opacity, 1);
+    transform: translate3d(var(--enter-translate-x, 0), var(--enter-translate-y, 0), 0)
+      scale3d(var(--enter-scale, 1), var(--enter-scale, 1), 1);
+  }
+}
+
+@keyframes exit {
+  to {
+    opacity: var(--exit-opacity, 1);
+    transform: translate3d(var(--exit-translate-x, 0), var(--exit-translate-y, 0), 0)
+      scale3d(var(--exit-scale, 1), var(--exit-scale, 1), 1);
+  }
+}
+
+@utility animate-in {
+  animation: enter var(--tw-duration, 150ms) var(--ease-smooth);
+}
+
+@utility animate-out {
+  animation: exit var(--tw-duration, 150ms) var(--ease-smooth);
+}
+
+@utility fade-in {
+  --enter-opacity: 0;
+}
+
+@utility fade-in-0 {
+  --enter-opacity: 0;
+}
+
+@utility fade-out {
+  --exit-opacity: 0;
+}
+
+@utility fade-out-0 {
+  --exit-opacity: 0;
+}
+
+@utility zoom-in-95 {
+  --enter-scale: 0.95;
+}
+
+@utility zoom-out-95 {
+  --exit-scale: 0.95;
+}
+
+/* Bare variants travel a full edge (sheets); `-2` nudges 0.5rem (popovers). */
+@utility slide-in-from-top {
+  --enter-translate-y: -100%;
+}
+
+@utility slide-in-from-bottom {
+  --enter-translate-y: 100%;
+}
+
+@utility slide-in-from-left {
+  --enter-translate-x: -100%;
+}
+
+@utility slide-in-from-right {
+  --enter-translate-x: 100%;
+}
+
+@utility slide-in-from-top-2 {
+  --enter-translate-y: -0.5rem;
+}
+
+@utility slide-in-from-bottom-2 {
+  --enter-translate-y: 0.5rem;
+}
+
+@utility slide-in-from-left-2 {
+  --enter-translate-x: -0.5rem;
+}
+
+@utility slide-in-from-right-2 {
+  --enter-translate-x: 0.5rem;
+}
+
+@utility slide-out-to-top {
+  --exit-translate-y: -100%;
+}
+
+@utility slide-out-to-bottom {
+  --exit-translate-y: 100%;
+}
+
+@utility slide-out-to-left {
+  --exit-translate-x: -100%;
+}
+
+@utility slide-out-to-right {
+  --exit-translate-x: 100%;
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+/*
+ * Gradient backgrounds as named utilities.
+ *
+ * Not `@theme` entries: Tailwind 4 has no `--background-image-*` namespace, so
+ * a gradient cannot be registered as a theme token the way a colour or a shadow
+ * can. Each one reads its CSS variable at use time, which is what lets the
+ * `.dark` block above override it.
+ */
+@utility bg-gradient-primary {
+  background-image: var(--gradient-primary);
+}
+
+@utility bg-gradient-secondary {
+  background-image: var(--gradient-secondary);
+}
+
+@utility bg-gradient-hero {
+  background-image: var(--gradient-hero);
+}
+
+@utility bg-gradient-card {
+  background-image: var(--gradient-card);
+}
+
+/*
+ * The prototype's `transition-smooth` / `transition-bounce`, which were
+ * `all .3s <easing>`. Kept as-is rather than rewritten to per-property
+ * transitions at ~30 call sites; `transition-all` is acceptable here because
+ * these are small cards and buttons, not layout-bearing containers.
+ */
+@utility transition-smooth {
+  transition: all 0.3s var(--ease-smooth);
+}
+
+@utility transition-bounce {
+  transition: all 0.3s var(--ease-bounce);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Every interactive element gets the same visible focus treatment. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}

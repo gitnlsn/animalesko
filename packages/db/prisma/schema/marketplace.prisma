@@ -1,0 +1,189 @@
+// ---------------------------------------------------------------------------
+// Demand side — booking, adoption, payment and reviews (apps/app).
+// ---------------------------------------------------------------------------
+
+/// One model for both prototype booking dialogs: BookingDialog (single day +
+/// time + duration) and PetSitterBookingDialog (date range) are just different
+/// ways of producing startsAt/endsAt.
+model Booking {
+  id     String        @id @default(cuid())
+  /// Short human-quotable reference, e.g. "ANM-7QK4D2".
+  code   String        @unique
+  status BookingStatus @default(PENDING)
+
+  startsAt DateTime
+  endsAt   DateTime
+
+  priceCents Int
+  currency   String @default("BRL") @db.Char(3)
+
+  notes              String?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  tutorId String
+  tutor   User   @relation("BookingTutor", fields: [tutorId], references: [id], onDelete: Cascade)
+
+  petId String
+  pet   Pet    @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  offeringId String
+  offering   ServiceOffering @relation(fields: [offeringId], references: [id])
+
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  payment      Payment?
+  review       Review?
+  appointment  Appointment?
+  conversation Conversation?
+
+  @@index([tutorId, startsAt(sort: Desc)])
+  @@index([orgId, startsAt])
+  @@index([status])
+  @@map("booking")
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  amountCents Int
+  currency    String        @default("BRL") @db.Char(3)
+  method      PaymentMethod
+  status      PaymentStatus @default(PENDING)
+  /// Identifier returned by the payment gateway.
+  gatewayRef  String?
+  /// PIX "copia e cola" payload, when method is PIX.
+  pixPayload  String?
+  paidAt      DateTime?
+  refundedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("payment")
+}
+
+model Review {
+  id      String   @id @default(cuid())
+  rating  Int      @db.SmallInt
+  comment String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId String
+  author   User   @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  /// A review is anchored to the booking it is about, which makes it
+  /// verifiable and caps it at one review per completed service.
+  bookingId String?  @unique
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, createdAt(sort: Desc)])
+  @@map("review")
+}
+
+model AdoptionListing {
+  id          String          @id @default(cuid())
+  status      AdoptionStatus  @default(DRAFT)
+  urgency     AdoptionUrgency @default(READY)
+  summary     String
+  /// Long-form "detailedDescription" from app/pages/PetDetails.tsx.
+  story       String?
+  city        String
+  state       String          @db.VarChar(2)
+  latitude    Float?
+  longitude   Float?
+  publishedAt DateTime?
+  adoptedAt   DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  petId String @unique
+  pet   Pet    @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  photos       AdoptionListingPhoto[]
+  applications AdoptionApplication[]
+  favorites    FavoriteListing[]
+  conversations Conversation[]
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([city, state])
+  @@index([orgId])
+  @@map("adoption_listing")
+}
+
+model AdoptionListingPhoto {
+  id       String @id @default(cuid())
+  url      String
+  position Int    @default(0)
+
+  listingId String
+  listing   AdoptionListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, position])
+  @@map("adoption_listing_photo")
+}
+
+model AdoptionApplication {
+  id        String                    @id @default(cuid())
+  status    AdoptionApplicationStatus @default(SUBMITTED)
+  message   String?
+  /// Shelter-defined questionnaire responses.
+  answers   Json?
+  decidedAt DateTime?
+  createdAt DateTime                  @default(now())
+  updatedAt DateTime                  @updatedAt
+
+  listingId String
+  listing   AdoptionListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  applicantId String
+  applicant   User   @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, applicantId])
+  @@index([applicantId])
+  @@map("adoption_application")
+}
+
+// Two tables rather than one polymorphic Favorite: a single table with two
+// nullable FKs cannot be uniquely constrained in Postgres (NULLs are distinct),
+// so it would silently allow duplicate favourites.
+
+model FavoriteListing {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  listingId String
+  listing   AdoptionListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@map("favorite_listing")
+}
+
+model FavoriteOffering {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  offeringId String
+  offering   ServiceOffering @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, offeringId])
+  @@map("favorite_offering")
+}

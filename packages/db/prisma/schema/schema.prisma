@@ -1,0 +1,24 @@
+// Animalesko — single schema shared by both apps.
+//
+//   apps/app  (consumer / demand side) — tutors adopt pets, book services,
+//             report lost pets, chat, review, earn points.
+//   apps/plus (provider / supply side) — shelters, clinics, petshops and
+//             independent providers publish offerings, manage their agenda,
+//             and keep clinical records for the animals they attend.
+//
+// Both read and write the same tables. Anything a provider creates in `plus`
+// is what a tutor consumes in `app`; the join points are ServiceOffering →
+// Booking → Appointment and AdoptionListing → AdoptionApplication.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../../src/generated"
+  moduleFormat = "esm"
+  runtime      = "nodejs"
+}
+
+// Prisma 7 no longer accepts connection URLs here — the CLI reads them from
+// prisma.config.ts and the client receives a driver adapter at construction.
+datasource db {
+  provider = "postgresql"
+}

@@ -1,0 +1,9 @@
+{
+  "extends": "@animalesko/config/tsconfig/library.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "dist", ".turbo"]
+}

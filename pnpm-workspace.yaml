@@ -1,0 +1,37 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Postinstall scripts are blocked by default; these three genuinely need them
+# (Prisma downloads its query engine, esbuild its native binary).
+allowBuilds:
+  "@prisma/engines": true
+  esbuild: true
+  prisma: true
+
+# Keep the toolchain identical across every workspace package.
+catalog:
+  typescript: 5.9.3
+  "@types/node": ^24.10.1
+  react: 19.2.8
+  react-dom: 19.2.8
+  "@types/react": ^19.2.7
+  "@types/react-dom": ^19.2.4
+  next: 16.3.1
+  zod: ^4.4.3
+  "@trpc/server": ^11.18.0
+  "@trpc/client": ^11.18.0
+  "@trpc/tanstack-react-query": ^11.18.0
+  "@tanstack/react-query": ^5.101.4
+  "@tanstack/react-query-devtools": ^5.101.4
+  superjson: ^2.2.6
+  prisma: ^7.9.1
+  "@prisma/client": ^7.9.1
+  better-auth: ^1.6.28
+  tailwindcss: ^4.3.3
+  "@tailwindcss/postcss": ^4.3.3
+  vitest: ^4.1.10
+  # ESLint stays on 9.x: eslint-plugin-react peers cap at ^9.7, so moving the
+  # workspace to ESLint 10 would drop React linting entirely.
+  eslint: ^9.39.5
+  typescript-eslint: ^8.67.0

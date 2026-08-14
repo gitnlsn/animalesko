@@ -1,0 +1,47 @@
+name: animalesko
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: animalesko-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-animalesko}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-animalesko}
+      # The init script below creates animalesko_test alongside this one.
+      POSTGRES_DB: animalesko_dev
+      # Faster initdb for a throwaway dev cluster.
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports:
+      # 5433 on the host so a locally installed Postgres on 5432 keeps working.
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # `pg_isready` alone reports ready before the init scripts finish, which
+      # races `prisma migrate`. Querying the test DB proves init actually ran.
+      test:
+        [
+          "CMD-SHELL",
+          "psql -U ${POSTGRES_USER:-animalesko} -d animalesko_test -c 'SELECT 1' || exit 1",
+        ]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    command:
+      # Dev/CI cluster: durability is worthless, speed is not.
+      - postgres
+      - -c
+      - fsync=off
+      - -c
+      - synchronous_commit=off
+      - -c
+      - full_page_writes=off
+      - -c
+      - max_connections=200
+
+volumes:
+  postgres-data:
+    driver: local

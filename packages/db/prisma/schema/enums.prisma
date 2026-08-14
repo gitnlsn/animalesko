@@ -1,0 +1,174 @@
+// ---------------------------------------------------------------------------
+// Shared vocabulary.
+//
+// The prototypes encoded these as free strings ("2 anos", "R$ 45/dia",
+// 'confirmado'), which is why the same concept had three incompatible shapes
+// across the two repos. Everything enumerable is an enum here; everything
+// monetary is an integer of cents; everything temporal is a DateTime.
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  TUTOR
+  PROVIDER
+  ADMIN
+}
+
+enum Species {
+  DOG
+  CAT
+  BIRD
+  RODENT
+  REPTILE
+  FISH
+  OTHER
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  UNKNOWN
+}
+
+enum PetSize {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum HealthStatus {
+  EXCELLENT
+  GOOD
+  ATTENTION
+  URGENT
+}
+
+enum OrganizationType {
+  SHELTER
+  CLINIC
+  PETSHOP
+  INDEPENDENT
+}
+
+enum OrganizationMemberRole {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ServiceType {
+  PET_SITTER
+  DOG_WALKER
+  DAYCARE
+  HOTEL
+  GROOMING
+  VET_CONSULT
+  VACCINATION
+  TRAINING
+  TRANSPORT
+  OTHER
+}
+
+/// How a ServiceOffering's price should be read. "R$ 45/dia" in the prototype
+/// becomes priceCents=4500 + PER_DAY, so it stays sortable and computable.
+enum PriceUnit {
+  PER_HOUR
+  PER_DAY
+  PER_NIGHT
+  PER_WALK
+  PER_SESSION
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum AdoptionStatus {
+  DRAFT
+  AVAILABLE
+  RESERVED
+  ADOPTED
+  ARCHIVED
+}
+
+enum AdoptionUrgency {
+  URGENT
+  PUPPY
+  READY
+}
+
+enum AdoptionApplicationStatus {
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum LostPetStatus {
+  LOST
+  FOUND
+  RESOLVED
+}
+
+enum NotificationType {
+  SERVICE
+  ADOPTION
+  REMINDER
+  MESSAGE
+  ALERT
+  SYSTEM
+}
+
+enum ReminderType {
+  GENERAL
+  MEDICATION
+  APPOINTMENT
+  GROOMING
+  FEEDING
+  EXERCISE
+}
+
+enum PlanTier {
+  FREE
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}

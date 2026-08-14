@@ -1,0 +1,210 @@
+// ---------------------------------------------------------------------------
+// Lost-pet alerts, messaging, notifications and gamification.
+//
+// Every one of these lived in localStorage in the prototype
+// (app/pages/PetAlert.tsx wrote the entire lost-pet registry to
+// localStorage["lostPets"], which meant no one but the reporter could ever see
+// an alert — the exact feature the page was for).
+// ---------------------------------------------------------------------------
+
+model LostPetAlert {
+  id          String        @id @default(cuid())
+  status      LostPetStatus @default(LOST)
+  name        String
+  species     Species
+  breed       String?
+  description String
+
+  lastSeenLat     Float
+  lastSeenLng     Float
+  lastSeenAddress String
+  lastSeenAt      DateTime
+
+  contactName  String
+  contactPhone String
+
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  reporterId String
+  reporter   User   @relation("AlertReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  /// Set when the reporter picks one of their registered pets.
+  petId String?
+  pet   Pet?    @relation(fields: [petId], references: [id], onDelete: SetNull)
+
+  photos    LostPetAlertPhoto[]
+  sightings LostPetSighting[]
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([lastSeenLat, lastSeenLng])
+  @@map("lost_pet_alert")
+}
+
+model LostPetAlertPhoto {
+  id       String @id @default(cuid())
+  url      String
+  position Int    @default(0)
+
+  alertId String
+  alert   LostPetAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@index([alertId, position])
+  @@map("lost_pet_alert_photo")
+}
+
+model LostPetSighting {
+  id        String   @id @default(cuid())
+  latitude  Float
+  longitude Float
+  address   String?
+  note      String?
+  sightedAt DateTime
+  createdAt DateTime @default(now())
+
+  alertId String
+  alert   LostPetAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  reporterId String?
+  reporter   User?   @relation("SightingReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+
+  @@index([alertId, sightedAt(sort: Desc)])
+  @@map("lost_pet_sighting")
+}
+
+// --- Messaging ---------------------------------------------------------------
+
+model Conversation {
+  id            String   @id @default(cuid())
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  /// A conversation is always *about* something: a provider, a listing or a
+  /// booking. All three are optional so a plain user-to-org thread also works.
+  orgId String?
+  org   Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  listingId String?
+  listing   AdoptionListing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  bookingId String?  @unique
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([lastMessageAt(sort: Desc)])
+  @@map("conversation")
+}
+
+model ConversationParticipant {
+  id         String    @id @default(cuid())
+  lastReadAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_participant")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  body      String?
+  imageUrl  String?
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime @default(now())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId String
+  sender   User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@map("message")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  body      String?
+  /// In-app destination, e.g. "/bookings/ANM-7QK4D2". Replaces the prototype's
+  /// non-serializable `action: () => void` callback on each notification.
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
+  @@map("notification")
+}
+
+// --- Gamification ("Pontos Aumigos") -----------------------------------------
+
+model GamificationProfile {
+  id        String   @id @default(cuid())
+  points    Int      @default(0)
+  level     Int      @default(1)
+  updatedAt DateTime @updatedAt
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("gamification_profile")
+}
+
+/// Append-only history. The prototype only kept a running total in
+/// localStorage, so points could not be audited, reversed or rate-limited.
+model PointsLedgerEntry {
+  id        String   @id @default(cuid())
+  points    Int
+  reason    String
+  /// Stable key for the action that granted the points, e.g. "pet_of_the_day".
+  source    String?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("points_ledger_entry")
+}
+
+model Badge {
+  id          String @id @default(cuid())
+  code        String @unique
+  name        String
+  description String
+  icon        String
+
+  awards UserBadge[]
+
+  @@map("badge")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  awardedAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  badgeId String
+  badge   Badge  @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@map("user_badge")
+}

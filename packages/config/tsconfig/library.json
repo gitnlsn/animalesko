@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Animalesko Library",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    // Ambient types are opted into per package: server packages add "node",
+    // browser-only ones (like @animalesko/ui) must not pull it in.
+    "types": []
+  }
+}

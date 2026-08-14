@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Animalesko Base",
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    // Prisma 7's generated client is TypeScript source that imports its own
+    // siblings with explicit .ts specifiers, so the whole workspace has to
+    // accept them. Safe here because nothing in this repo emits via tsc.
+    "allowImportingTsExtensions": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": false,
+
+    // Internal packages are consumed as TypeScript source (see each package's
+    // "exports"), so nothing in this workspace emits .d.ts files. Leaving
+    // declaration on only produces TS2742 "cannot be named" errors from
+    // pnpm's non-flat node_modules.
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "incremental": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "noEmit": true
+  },
+  "exclude": ["node_modules", "dist", ".next", ".turbo"]
+}

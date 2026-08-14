@@ -1,0 +1,125 @@
+// ---------------------------------------------------------------------------
+// Pet — the entity both apps revolve around.
+//
+// The prototypes had three incompatible Pet shapes (plus/PetCard with numeric
+// age+weight, app/MyPets with string age+weight+behavior, app/BookingDialog
+// with a minimal one). This is the single reconciled model:
+//
+//   * a tutor's own animal            → ownerId set
+//   * an animal held by a shelter     → custodianOrgId set, ownerId null
+//   * adopted                         → ownerId set, listing marked ADOPTED
+//
+// Age is never stored: it is derived from birthDate. Storing it was the source
+// of "3 anos" going stale in both prototypes.
+// ---------------------------------------------------------------------------
+
+model Pet {
+  id           String       @id @default(cuid())
+  name         String
+  species      Species
+  breed        String?
+  sex          Sex          @default(UNKNOWN)
+  size         PetSize?
+  birthDate    DateTime?    @db.Date
+  weightKg     Decimal?     @db.Decimal(5, 2)
+  healthStatus HealthStatus @default(GOOD)
+  photoUrl     String?
+  /// Free-text observations: allergies, medication, behaviour.
+  notes        String?
+  temperament  String[]     @default([])
+  neutered     Boolean      @default(false)
+  microchip    String?      @unique
+  deceasedAt   DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  ownerId String?
+  owner   User?   @relation("PetOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  custodianOrgId String?
+  custodianOrg   Organization? @relation("PetCustodian", fields: [custodianOrgId], references: [id], onDelete: SetNull)
+
+  healthRecords   HealthRecord[]
+  vaccinations    Vaccination[]
+  reminders       Reminder[]
+  bookings        Booking[]
+  appointments    Appointment[]
+  adoptionListing AdoptionListing?
+  lostPetAlerts   LostPetAlert[]
+
+  @@index([ownerId])
+  @@index([custodianOrgId])
+  @@index([species, size])
+  @@map("pet")
+}
+
+/// A dated clinical observation. Replaces plus/HealthRecordForm's console.log.
+model HealthRecord {
+  id           String   @id @default(cuid())
+  recordedAt   DateTime @default(now())
+  weightKg     Decimal? @db.Decimal(5, 2)
+  temperatureC Decimal? @db.Decimal(4, 2)
+  symptoms     String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  petId String
+  pet   Pet    @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  /// Who recorded it — the tutor themselves, or a vet acting for an org.
+  authorId String?
+  author   User?   @relation("HealthRecordAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  orgId String?
+  org   Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+
+  @@index([petId, recordedAt(sort: Desc)])
+  @@map("health_record")
+}
+
+/// Vaccine dose. Status ("Em dia" / "Atrasada" / "Próxima") is *derived* from
+/// nextDoseAt at read time rather than stored — the prototype stored it and it
+/// was already wrong in its own mock data.
+model Vaccination {
+  id           String    @id @default(cuid())
+  name         String
+  appliedAt    DateTime  @db.Date
+  nextDoseAt   DateTime? @db.Date
+  batch        String?
+  veterinarian String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  petId String
+  pet   Pet    @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  orgId String?
+  org   Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+
+  @@index([petId, appliedAt(sort: Desc)])
+  @@index([nextDoseAt])
+  @@map("vaccination")
+}
+
+model Reminder {
+  id          String       @id @default(cuid())
+  type        ReminderType @default(GENERAL)
+  title       String
+  description String?
+  dueAt       DateTime
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  petId String?
+  pet   Pet?    @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dueAt])
+  @@index([petId])
+  @@map("reminder")
+}

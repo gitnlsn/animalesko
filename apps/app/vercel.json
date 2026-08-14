@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@animalesko/app...",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "regions": ["gru1"],
+  "git": {
+    "deploymentEnabled": { "main": true }
+  }
+}
