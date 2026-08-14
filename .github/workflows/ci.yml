@@ -66,3 +66,58 @@ jobs:
       - run: pnpm test
       - run: pnpm test:integration
       - run: pnpm build
+
+  # Applies pending migrations to the Neon production database.
+  #
+  # A job here rather than a separate workflow so it can depend on `verify`:
+  # the property that matters is that nothing reaches production unless the
+  # whole suite passed. A workflow triggered on `push: main` would race CI and
+  # could migrate a commit whose tests are failing.
+  migrate:
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    # Scopes the connection string to this one job and records a deployment.
+    # A required reviewer can be added in repo settings without touching this
+    # file.
+    environment: production
+
+    # Overrides the workflow-level group, which cancels in progress. That is
+    # right for CI and wrong here: interrupting `migrate deploy` can leave a
+    # half-applied migration and a held advisory lock. Two rapid merges queue.
+    concurrency:
+      group: migrate-production
+      cancel-in-progress: false
+
+    env:
+      # Overrides the workflow-level value pointing at the CI service
+      # container — job-level env wins. Must be Neon's *unpooled* host (no
+      # `-pooler`): Prisma Migrate takes a session-level advisory lock, and
+      # PgBouncer in transaction mode does not preserve session state, so the
+      # pooled endpoint hangs instead of failing cleanly.
+      DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Records what was outstanding before anything is applied — the line you
+      # want in the log when a deploy goes wrong. Never fails the job.
+      - name: Show pending migrations
+        continue-on-error: true
+        run: pnpm --filter @animalesko/db exec prisma migrate status
+
+      # The same command a human would run as a release step, so there is one
+      # path rather than two. Deliberately no `db:generate` (migrations do not
+      # need the client) and never `db:seed` — the seed writes demo accounts
+      # with a known password.
+      - run: pnpm db:deploy
