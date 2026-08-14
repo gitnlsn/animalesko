@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "./generated/client.ts";
+import { truncateAllTables } from "./reset.ts";
 
 /**
  * Helpers for the integration suite. Nothing here is imported by application
@@ -52,24 +53,12 @@ export function createTestClient(options: TestClientOptions = {}): PrismaClient 
 }
 
 /**
- * Empties every application table in one statement.
+ * Empties every application table, preserving `_prisma_migrations`.
  *
- * TRUNCATE ... CASCADE is dramatically faster than deleting per-model in FK
- * order, and it cannot be defeated by adding a new model later — the table list
- * is read from the catalog, not hardcoded. `_prisma_migrations` is preserved so
- * the schema does not have to be re-applied between tests.
+ * The implementation lives in ./reset.ts because the seed and cleanup scripts
+ * need the same statement and must not import a module documented as
+ * test-only. Nothing else changed: this is still the suite's entry point.
  */
 export async function resetDatabase(client: PrismaClient): Promise<void> {
-  const tables = await client.$queryRaw<{ tablename: string }[]>`
-    SELECT tablename
-    FROM pg_tables
-    WHERE schemaname = 'public'
-      AND tablename <> '_prisma_migrations'
-  `;
-
-  if (tables.length === 0) return;
-
-  const list = tables.map(({ tablename }) => `"public"."${tablename}"`).join(", ");
-
-  await client.$executeRawUnsafe(`TRUNCATE TABLE ${list} RESTART IDENTITY CASCADE`);
+  await truncateAllTables(client);
 }

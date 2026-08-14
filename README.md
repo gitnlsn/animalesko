@@ -27,32 +27,113 @@ pnpm setup          # install + start Postgres + migrate + seed
 pnpm dev            # both apps, on 3000 and 3001
 ```
 
-`pnpm setup` is idempotent — re-run it any time.
-
-Demo accounts (password `animalesko123` for all):
-
-| Account                   | Signs into | Role                        |
-| ------------------------- | ---------- | --------------------------- |
-| `joao.silva@email.com`    | `app`      | Tutor, owns Rex and Mimi    |
-| `maria.silva@email.com`   | `plus`     | Owner of _Pet Care Silva_   |
-| `joao.santos@email.com`   | `plus`     | Owner of _Passeios do João_ |
-| `contato@abrigoamigo.org` | `plus`     | Owner of _Abrigo Amigo_     |
+Re-run `pnpm setup` any time; the seed step wipes and rebuilds the demonstration
+data rather than adding to it. Sign in as `joao.silva@email.com` with the
+password `animalesko123` — see [Seeding and cleanup](#seeding-and-cleanup) for
+the rest of the accounts.
 
 ## Commands
 
-| Command                 | What it does                                          |
-| ----------------------- | ----------------------------------------------------- |
-| `pnpm dev`              | Both apps in watch mode                               |
-| `pnpm build`            | Build everything (topologically ordered by Turborepo) |
-| `pnpm typecheck`        | `tsc --noEmit` across the workspace                   |
-| `pnpm lint`             | ESLint across the workspace                           |
-| `pnpm test`             | Unit tests                                            |
-| `pnpm test:integration` | Integration tests against the Dockerized Postgres     |
-| `pnpm db:up` / `:down`  | Start / stop Postgres                                 |
-| `pnpm db:migrate`       | Create and apply a migration                          |
-| `pnpm db:seed`          | Re-seed (idempotent)                                  |
-| `pnpm db:studio`        | Prisma Studio                                         |
-| `pnpm db:nuke`          | Drop the Postgres volume and start over               |
+| Command                  | What it does                                          |
+| ------------------------ | ----------------------------------------------------- |
+| `pnpm dev`               | Both apps in watch mode                               |
+| `pnpm build`             | Build everything (topologically ordered by Turborepo) |
+| `pnpm typecheck`         | `tsc --noEmit` across the workspace                   |
+| `pnpm lint`              | ESLint across the workspace                           |
+| `pnpm test`              | Unit tests                                            |
+| `pnpm test:integration`  | Integration tests against the Dockerized Postgres     |
+| `pnpm db:up` / `:down`   | Start / stop Postgres                                 |
+| `pnpm db:migrate`        | Create and apply a migration                          |
+| `pnpm db:seed`           | Wipe and re-populate with demonstration data          |
+| `pnpm db:seed:reference` | Badges and the administrator only — no demo data      |
+| `pnpm db:cleanup`        | Remove all demonstration data, ready for real users   |
+| `pnpm db:studio`         | Prisma Studio                                         |
+| `pnpm db:nuke`           | Drop the Postgres volume and start over               |
+
+## Seeding and cleanup
+
+The seed exists so both apps can be reviewed with a full database, and the
+cleanup exists so the same database can then be handed to real users. They are
+two halves of one operation and share their safety rails.
+
+```sh
+pnpm db:seed             # wipe, then write ~5.5k rows of demonstration data
+pnpm db:cleanup          # remove all of it, leaving a database ready for signups
+pnpm db:seed:reference   # badges + administrator only, no demo data
+```
+
+**`pnpm db:seed` is destructive.** It truncates every table before writing,
+rather than upserting in place, because every date it produces is relative to
+the moment it runs — an idempotent re-seed three weeks later would leave "hoje
+na agenda" pointing at a day three weeks past. Re-running it is the intended way
+to refresh the data.
+
+The dataset is deterministic: `SEED_RANDOM_SEED` (default `animalesko`) fixes
+every draw, so two runs produce identical rows and a screenshot can be
+reproduced from the seed alone. Demo rows carry a `cdmo…` primary key, which is
+a valid cuid — around fifty procedures validate their id argument with
+`z.cuid()`, so an obviously-synthetic id would be rejected by the contract
+before the query ran.
+
+It finishes by checking itself. Twenty-one assertions cover the conditions that
+decide whether a screen renders content or an empty state — an `ADOPTED` listing
+dated inside the current month, appointments dated today, vaccinations both
+overdue and nearly due, offerings for all four `/servicos` tabs, and so on — and
+the command exits non-zero if any fails.
+
+| Account                   | Signs into | Role                                              |
+| ------------------------- | ---------- | ------------------------------------------------- |
+| `joao.silva@email.com`    | `app`      | Tutor — the account to review with                |
+| `carla.menezes@email.com` | `app`      | PREMIUM foster home, 55 animals                   |
+| `maria.silva@email.com`   | `plus`     | Owner of _Pet Care Silva_, member of a second org |
+| `joao.santos@email.com`   | `plus`     | Owner of _Passeios do João_                       |
+| `contato@abrigoamigo.org` | `plus`     | Owner of _Abrigo Amigo_ (shelter)                 |
+
+Password `animalesko123` for all of them.
+
+### What cleanup leaves behind
+
+`pnpm db:cleanup` truncates everything and re-applies the reference layer: the
+four `Badge` rows, which are application content rather than demonstration data,
+and one administrator built from `ADMIN_EMAIL` / `ADMIN_PASSWORD`. Set neither
+and no administrator is created — there is deliberately no default password. It
+verifies the result with `COUNT(*)` and fails if anything else survived.
+
+Truncation rather than deleting-what-the-seed-wrote is not laziness: the table
+list comes from `pg_tables`, so a model added later cannot be missed, and four
+relations are `onDelete: SetNull` (`Appointment.tutorId`,
+`HealthRecord.authorId`, `Vaccination.orgId`, `ClientContact.userId`), which
+means deleting the seeded users and organizations would orphan rows rather than
+remove them.
+
+Images uploaded through `plus` during a review live in Vercel Blob under
+`org/{orgId}/…` and are **not** removed by a database truncate. The seed itself
+only writes external URLs, so this only matters if somebody uploaded something.
+
+### Running against production
+
+Both commands take their target from `DIRECT_DATABASE_URL`. Against `localhost`
+they run unguarded; against anything else they refuse unless `SEED_CONFIRM`
+matches the database name exactly, and they print the host, the database and the
+row counts they are about to destroy before touching anything.
+
+```sh
+export DIRECT_DATABASE_URL='<Neon unpooled URL>'   # not the -pooler host
+export SEED_CONFIRM='<database name>'
+
+pnpm db:deploy                                     # migrations first
+pnpm db:seed                                       # review with full data
+#   … walk both deployments …
+ADMIN_EMAIL='…' ADMIN_PASSWORD='…' pnpm db:cleanup # hand over
+```
+
+CI never seeds. The `migrate` job in `.github/workflows/ci.yml` runs
+`pnpm db:deploy` and nothing else; seeding and cleanup are deliberately manual.
+
+One thing to undo afterwards: both `next.config.ts` files allow
+`images.unsplash.com` so the demonstration photos can be optimised by
+`next/image`. Nothing but the seed uses it, and it can be dropped once the
+database has been handed over.
 
 ## Database
 
@@ -144,7 +225,9 @@ an image URL instead of a file, which is also how the workspace runs locally.
 one will not verify on the other.
 
 Run `pnpm db:deploy` against production as a release step; Vercel builds do not
-migrate on their own.
+migrate on their own. `SEED_CONFIRM`, `SEED_RANDOM_SEED` and `ADMIN_*` are read
+only by the seed and cleanup scripts, which are run by hand from a shell — they
+do not belong in either Vercel project.
 
 ## Reference
 

@@ -14,7 +14,14 @@
     "AUTH_COOKIE_DOMAIN",
     "NEXT_PUBLIC_APP_URL",
     "NEXT_PUBLIC_PLUS_URL",
-    "BLOB_READ_WRITE_TOKEN"
+    "BLOB_READ_WRITE_TOKEN",
+    // Read only by prisma/seed.ts and prisma/cleanup.ts, which Turborepo does
+    // not run — declared here so the lint rule can see them.
+    "SEED_CONFIRM",
+    "SEED_RANDOM_SEED",
+    "ADMIN_EMAIL",
+    "ADMIN_PASSWORD",
+    "ADMIN_NAME"
   ],
   "globalDependencies": ["**/.env.*local", "pnpm-workspace.yaml"],
   "tasks": {

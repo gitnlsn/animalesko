@@ -21,10 +21,16 @@ for (const file of [".env.local", ".env"]) {
 const config: NextConfig = {
   reactStrictMode: true,
 
-  // Blob URLs are the one remote host next/image is allowed to optimise. Also
-  // needed by apps/app, which renders the same listing photos.
+  // Blob URLs are what users actually upload. `images.unsplash.com` is there
+  // for `pnpm db:seed` only: the demonstration data references stock photos, and
+  // without the host on this list next/image refuses to optimise them and every
+  // card falls back to the same placeholder. It is safe to drop once the
+  // database has been handed over with `pnpm db:cleanup`.
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+    ],
   },
 
   // Workspace packages are published as TypeScript source, so Next compiles

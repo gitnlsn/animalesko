@@ -16,6 +16,8 @@
     "migrate:deploy": "prisma migrate deploy",
     "reset": "prisma migrate reset --force",
     "seed": "tsx prisma/seed.ts",
+    "seed:reference": "tsx prisma/seed.ts --reference-only",
+    "cleanup": "tsx prisma/cleanup.ts",
     "studio": "prisma studio",
     "format": "prisma format",
     "validate": "prisma validate",
