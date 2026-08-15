@@ -14,8 +14,33 @@ function requiredEnv(name: string): string {
   return value;
 }
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-const plusUrl = process.env.NEXT_PUBLIC_PLUS_URL ?? "http://localhost:3001";
+/**
+ * Better Auth compares the request's `Origin` header against `trustedOrigins`
+ * by exact string equality on the normalized origin, so a configured value
+ * carrying a trailing slash silently never matches.
+ */
+function origin(value: string | undefined): string | undefined {
+  const trimmed = value?.trim().replace(/\/+$/, "");
+  return trimmed ? trimmed : undefined;
+}
+
+// Set on every Vercel deployment: the deployment's own hostname, and the
+// project's production hostname. Previews get a fresh hostname per commit, so
+// they can only be trusted by deriving them here rather than by configuration.
+const deploymentUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined;
+const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : undefined;
+
+const appUrl = origin(process.env.NEXT_PUBLIC_APP_URL) ?? productionUrl ?? "http://localhost:3000";
+const plusUrl = origin(process.env.NEXT_PUBLIC_PLUS_URL) ?? "http://localhost:3001";
+
+// On a preview the deployment hostname is the one the browser is actually on;
+// pointing baseURL at the production host there would break callbacks.
+const baseUrl =
+  origin(process.env.BETTER_AUTH_URL) ??
+  (process.env.VERCEL_ENV === "preview" ? deploymentUrl : undefined) ??
+  appUrl;
 
 /**
  * One Better Auth instance, mounted by both apps.
@@ -28,7 +53,7 @@ const plusUrl = process.env.NEXT_PUBLIC_PLUS_URL ?? "http://localhost:3001";
 export const auth = betterAuth({
   appName: "Animalesko",
   secret: requiredEnv("BETTER_AUTH_SECRET"),
-  baseURL: process.env.BETTER_AUTH_URL ?? appUrl,
+  baseURL: baseUrl,
 
   database: prismaAdapter(db, { provider: "postgresql" }),
 
@@ -66,8 +91,12 @@ export const auth = betterAuth({
     },
   },
 
-  // Both origins must be trusted or cross-app sign-in is rejected as CSRF.
-  trustedOrigins: [appUrl, plusUrl],
+  // Both origins must be trusted or cross-app sign-in is rejected as CSRF. The
+  // Vercel hostnames are included so preview deployments — and the production
+  // alias, before a custom domain exists — can sign in without extra config.
+  trustedOrigins: [appUrl, plusUrl, deploymentUrl, productionUrl].filter(
+    (value): value is string => Boolean(value),
+  ),
 
   advanced: {
     crossSubDomainCookies: process.env.AUTH_COOKIE_DOMAIN
