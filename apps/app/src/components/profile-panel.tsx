@@ -13,7 +13,7 @@ import {
   DialogTitle,
   initials,
 } from "@animalesko/ui";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
   Calendar,
@@ -51,6 +51,7 @@ const LINKS = [
 export function ProfilePanel() {
   const trpc = useTRPC();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -134,6 +135,12 @@ export function ProfilePanel() {
           className="w-full justify-start text-destructive"
           onClick={async () => {
             await signOut();
+            // The browser query client lives for the whole tab, so without this
+            // the previous user's favourites, notifications and profile stay in
+            // memory — and any still-mounted protected query (every pet card
+            // holds `favorite.ids`) refetches against the cleared cookie and
+            // comes back UNAUTHORIZED.
+            queryClient.clear();
             router.refresh();
             router.push("/");
           }}

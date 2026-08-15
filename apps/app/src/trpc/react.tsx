@@ -24,6 +24,32 @@ function getQueryClient(): QueryClient {
   return (browserQueryClient ??= createQueryClient());
 }
 
+/**
+ * Whether a down-message carries an UNAUTHORIZED error.
+ *
+ * `loggerLink` routes any errored response through `console.error`, and Next's
+ * dev overlay promotes every `console.error` into a red "Console Error" card.
+ * A protected query losing its cookie mid-session is an expected outcome the
+ * UI already handles, so it should not read as a defect. Everything else — a
+ * genuine 500, a FORBIDDEN we did not anticipate — still logs.
+ *
+ * `TRPCClientError` exposes the error's `data` directly; a streamed envelope
+ * nests it under `result.error`, so both shapes are checked.
+ */
+function isUnauthorized(result: unknown): boolean {
+  if (typeof result !== "object" || result === null) return false;
+
+  const candidate = result as {
+    data?: { code?: string };
+    result?: { error?: { data?: { code?: string } } };
+  };
+
+  return (
+    candidate.data?.code === "UNAUTHORIZED" ||
+    candidate.result?.error?.data?.code === "UNAUTHORIZED"
+  );
+}
+
 function getBaseUrl(): string {
   if (typeof window !== "undefined") return window.location.origin;
   if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
@@ -38,9 +64,14 @@ export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
     createTRPCClient<AppRouter>({
       links: [
         loggerLink({
-          enabled: (op) =>
-            process.env.NODE_ENV === "development" ||
-            (op.direction === "down" && op.result instanceof Error),
+          enabled: (op) => {
+            if (op.direction === "down" && isUnauthorized(op.result)) return false;
+
+            return (
+              process.env.NODE_ENV === "development" ||
+              (op.direction === "down" && op.result instanceof Error)
+            );
+          },
         }),
         httpBatchStreamLink({
           url: `${getBaseUrl()}/api/trpc`,
