@@ -152,6 +152,30 @@ model Notification {
   @@map("notification")
 }
 
+/// A device that has agreed to receive push notifications.
+///
+/// One row per device, not per user: the same account signed in on a phone and
+/// a tablet has to reach both, and the same device handed to a second user has
+/// to stop reaching the first — which is why `token` is unique and re-registering
+/// moves it rather than duplicating it.
+///
+/// Tokens expire on their own schedule. `lastSeenAt` is what makes it possible
+/// to retire the ones FCM has stopped accepting instead of retrying them
+/// forever.
+model PushDevice {
+  id         String         @id @default(cuid())
+  token      String         @unique
+  platform   DevicePlatform
+  createdAt  DateTime       @default(now())
+  lastSeenAt DateTime       @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_device")
+}
+
 // --- Gamification ("Pontos Aumigos") -----------------------------------------
 
 model GamificationProfile {

@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+
 import type { Prisma } from "@animalesko/db";
 
 /**
@@ -37,9 +39,63 @@ export async function withTransaction<T>(
   db: unknown,
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
 ): Promise<T> {
-  if (isTransactable(db)) {
-    return db.$transaction(fn);
+  // Already inside one: join it, and let the outermost call own the effects.
+  // Flushing here would fire them before the real commit.
+  if (!isTransactable(db)) {
+    return fn(db as Prisma.TransactionClient);
   }
 
-  return fn(db as Prisma.TransactionClient);
+  const effects: AfterCommitEffect[] = [];
+  const result = await effectStorage.run(effects, () => db.$transaction(fn));
+
+  await flush(effects);
+  return result;
+}
+
+type AfterCommitEffect = () => Promise<void> | void;
+
+const effectStorage = new AsyncLocalStorage<AfterCommitEffect[]>();
+
+/**
+ * Defers work until the surrounding transaction has actually committed.
+ *
+ * Push delivery is the reason this exists. `notify` runs inside the transaction
+ * that creates the thing being announced — a booking, a message — and sending
+ * from there would push a notification for a booking that then rolls back, and
+ * would hold a database connection open across a network call to Firebase for
+ * every recipient.
+ *
+ * Registered effects run after `$transaction` resolves, and are skipped
+ * entirely if it throws: `run` unwinds before `flush` is reached.
+ *
+ * Outside any transaction — a caller that never went through
+ * `withTransaction` — the effect runs immediately, which is the same ordering
+ * guarantee that context could offer.
+ */
+export function afterCommit(effect: AfterCommitEffect): void {
+  const effects = effectStorage.getStore();
+
+  if (!effects) {
+    void Promise.resolve()
+      .then(effect)
+      .catch(() => undefined);
+    return;
+  }
+
+  effects.push(effect);
+}
+
+/**
+ * Effects are independent of each other and of the caller's response: a
+ * Firebase outage must not turn a booking that *did* commit into a failed
+ * request. So each is awaited for ordering but its rejection is swallowed.
+ */
+async function flush(effects: AfterCommitEffect[]): Promise<void> {
+  for (const effect of effects) {
+    try {
+      await effect();
+    } catch {
+      // Deliberately ignored — see above.
+    }
+  }
 }

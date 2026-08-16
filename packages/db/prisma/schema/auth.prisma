@@ -38,6 +38,7 @@ model User {
   conversations        ConversationParticipant[]
   messagesSent         Message[]                @relation("MessageSender")
   notifications        Notification[]
+  pushDevices          PushDevice[]
   reminders            Reminder[]
   gamification         GamificationProfile?
   pointsLedger         PointsLedgerEntry[]

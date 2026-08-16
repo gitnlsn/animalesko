@@ -1,3 +1,8 @@
+import { db as rootDb } from "@animalesko/db";
+
+import { sendPush } from "../push/send-push.ts";
+import { afterCommit } from "../transaction.ts";
+
 import type { Database, NotificationType } from "@animalesko/db";
 
 export type NotifyDb = Pick<Database, "notification">;
@@ -30,4 +35,24 @@ export async function notify(db: NotifyDb, input: NotifyInput): Promise<void> {
       href: input.href ?? null,
     },
   });
+
+  /**
+   * The same notification, pushed to the user's devices.
+   *
+   * Deferred rather than awaited here for two reasons. The row above is written
+   * inside the caller's transaction, so sending now would announce a booking
+   * that may still roll back; and Firebase is a network call that would hold a
+   * database connection open for the length of it, once per recipient.
+   *
+   * `rootDb` and not `db`: `db` is the transaction client, which is closed by
+   * the time this runs.
+   */
+  afterCommit(() =>
+    sendPush(rootDb, {
+      userId: input.userId,
+      title: input.title,
+      body: input.body ?? null,
+      href: input.href ?? null,
+    }),
+  );
 }

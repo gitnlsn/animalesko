@@ -9,6 +9,7 @@ import { notificationRouter } from "./notification.ts";
 import { paymentRouter } from "./payment.ts";
 import { petRouter } from "./pet.ts";
 import { profileRouter } from "./profile.ts";
+import { pushRouter } from "./push.ts";
 import { reviewRouter } from "./review.ts";
 
 /**
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
   payment: paymentRouter,
   review: reviewRouter,
   notification: notificationRouter,
+  push: pushRouter,
   message: messageRouter,
   alert: alertRouter,
   gamification: gamificationRouter,

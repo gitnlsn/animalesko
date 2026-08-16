@@ -153,6 +153,14 @@ enum NotificationType {
   SYSTEM
 }
 
+/// Which push service a device token belongs to. Both go through Firebase —
+/// APNs sits behind FCM — but the two are registered and revoked separately,
+/// and a stale token has to be attributed to a platform to be diagnosed.
+enum DevicePlatform {
+  IOS
+  ANDROID
+}
+
 enum ReminderType {
   GENERAL
   MEDICATION

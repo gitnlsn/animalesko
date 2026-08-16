@@ -20,5 +20,6 @@ export * from "./organization/index.ts";
 export * from "./payment/index.ts";
 export * from "./pet/index.ts";
 export * from "./profile/index.ts";
+export * from "./push/index.ts";
 export * from "./reminder/index.ts";
 export * from "./review/index.ts";

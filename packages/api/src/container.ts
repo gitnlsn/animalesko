@@ -1,5 +1,6 @@
 import type { Database } from "@animalesko/db";
 
+import { RegisterPushDeviceUseCase, UnregisterPushDeviceUseCase } from "./use-cases/push/index.ts";
 import {
   CreateAnimalUseCase,
   GetAnimalUseCase,
@@ -178,6 +179,10 @@ export function createUseCases(deps: UseCaseDeps) {
       unreadCount: new CountUnreadNotificationsUseCase(deps),
       markRead: new MarkNotificationReadUseCase(deps),
       markAllRead: new MarkAllNotificationsReadUseCase(deps),
+    },
+    push: {
+      register: new RegisterPushDeviceUseCase(deps),
+      unregister: new UnregisterPushDeviceUseCase(deps),
     },
     message: {
       conversations: new ListConversationsUseCase(deps),
