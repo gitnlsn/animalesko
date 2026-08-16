@@ -2,6 +2,7 @@ import { db } from "@animalesko/db";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { bearer } from "better-auth/plugins/bearer";
 import { customSession } from "better-auth/plugins/custom-session";
 
 import { organizationsForUser, type SessionOrganization } from "./permissions.ts";
@@ -47,6 +48,38 @@ const extraOrigins = (process.env.AUTH_TRUSTED_ORIGINS ?? "")
 
 const appUrl = origin(process.env.NEXT_PUBLIC_APP_URL) ?? productionUrl ?? "http://localhost:3000";
 const plusUrl = origin(process.env.NEXT_PUBLIC_PLUS_URL) ?? "http://localhost:3001";
+
+// The origins a Capacitor WebView reports. They are fixed by the platform
+// rather than by our deployment, so they are listed here instead of in
+// AUTH_TRUSTED_ORIGINS, where every environment would repeat them.
+//
+// All three are needed, and the reason is easy to get wrong: Android's
+// `androidScheme` defaults to **https**, so a stock Android build reports
+// `https://localhost` — not the `http://localhost` you would guess from the
+// fact that nothing is encrypted. `http://localhost` covers a build that sets
+// the scheme back to http, and `capacitor://localhost` is iOS.
+//
+// Note these are exact origins: `http(s)://localhost` is the default port only,
+// and does not admit the dev servers on :3000 / :3001.
+const nativeOrigins = ["capacitor://localhost", "https://localhost", "http://localhost"];
+
+/**
+ * Every origin allowed to call this deployment.
+ *
+ * Exported because Better Auth is not the only thing that has to agree on it:
+ * the tRPC route handler answers cross-origin requests from the native app too,
+ * and it has to allow exactly this set. Two hand-maintained lists would drift,
+ * and the failure mode is silent — a preflight that 204s while the real request
+ * never happens.
+ */
+export const trustedOrigins: string[] = [
+  appUrl,
+  plusUrl,
+  deploymentUrl,
+  productionUrl,
+  ...nativeOrigins,
+  ...extraOrigins,
+].filter((value): value is string => Boolean(value));
 
 // On a preview the deployment hostname is the one the browser is actually on;
 // pointing baseURL at the production host there would break callbacks.
@@ -107,9 +140,7 @@ export const auth = betterAuth({
   // Both origins must be trusted or cross-app sign-in is rejected as CSRF. The
   // Vercel hostnames are included so preview deployments — and the production
   // alias, before a custom domain exists — can sign in without extra config.
-  trustedOrigins: [appUrl, plusUrl, deploymentUrl, productionUrl, ...extraOrigins].filter(
-    (value): value is string => Boolean(value),
-  ),
+  trustedOrigins,
 
   advanced: {
     crossSubDomainCookies: process.env.AUTH_COOKIE_DOMAIN
@@ -161,6 +192,28 @@ export const auth = betterAuth({
         activeOrganizationId: activeOrganizationId ?? organizations[0]?.id ?? null,
       };
     }),
+
+    /**
+     * Token sessions for the native apps.
+     *
+     * A Capacitor WebView serves the bundle from `capacitor://localhost`, so a
+     * cookie scoped to `.animalesko.com` is never sent to the API — the whole
+     * cookie mechanism the web apps rely on is unavailable there. This plugin
+     * accepts `Authorization: Bearer <session token>` and converts it into the
+     * session cookie the rest of the stack already expects, so every
+     * `auth.api.getSession({ headers })` call — and therefore every tRPC
+     * procedure — works unchanged. It also emits the token as a
+     * `set-auth-token` response header for the client to persist.
+     *
+     * The web flow is untouched: a request that carries a cookie and no
+     * Authorization header never enters this plugin's `before` hook.
+     *
+     * `requireSignature` stays at its default. The trade-off is deliberate but
+     * worth naming: a bearer token authenticates outside SameSite and CSRF
+     * cookie protections, so on the device it must live in the Keychain /
+     * Keystore rather than in web storage. See packages/auth/src/client.ts.
+     */
+    bearer(),
 
     // Must stay last: it flushes Set-Cookie headers from Server Actions and
     // Route Handlers, and it only sees cookies set by plugins before it.
