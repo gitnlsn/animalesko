@@ -49,16 +49,27 @@ adb_bin() { echo "$(android_sdk)/platform-tools/adb"; }
 
 # --- web bundle -------------------------------------------------------------
 
-# NEXT_PUBLIC_API_URL is inlined into the JavaScript at build time, so it is the
-# one input that decides which server the shipped app talks to. Getting it wrong
-# produces an app that builds, installs, launches — and reaches nothing.
+# Three NEXT_PUBLIC_* values are inlined into the JavaScript at build time and
+# cannot be changed afterwards.
+#
+# All three must be passed explicitly, and the reason is a trap worth naming:
+# next.config.ts loads the workspace .env, so anything left unset here inherits
+# whatever a developer has locally. Pinning only the API URL produced a signed
+# release whose share links pointed at http://localhost:3000 and whose "open
+# Plus" button pointed at http://localhost:3001 — a build that looks perfect and
+# is broken for every user.
 build_web() {
-  local api_url="$1"
+  local api_url="$1" web_url="$2" plus_url="$3"
 
   step "Building web bundle"
-  info "API: $api_url"
+  info "API:  $api_url"
+  info "web:  $web_url   (share links, deep links)"
+  info "plus: $plus_url"
 
-  NEXT_PUBLIC_API_URL="$api_url" pnpm exec next build
+  NEXT_PUBLIC_API_URL="$api_url" \
+  NEXT_PUBLIC_APP_URL="$web_url" \
+  NEXT_PUBLIC_PLUS_URL="$plus_url" \
+    pnpm exec next build
 
   [ -d "$APP_DIR/out" ] || die "next build produced no out/ directory."
 }
@@ -87,6 +98,8 @@ ${BOLD}Animalesko mobile${OFF}
     API_URL            Override the API the build points at
     DEV_API_URL        Dev default (http://localhost:3000)
     PROD_API_URL       Release default (https://app.animalesko.org)
+    PROD_WEB_URL       Origin for share/deep links (defaults to PROD_API_URL)
+    PROD_PLUS_URL      Provider app (https://plus.animalesko.org)
 EOF
 }
 
@@ -153,7 +166,8 @@ cmd_dev_android() {
   "$adb" reverse tcp:3000 tcp:3000
   info "emulator localhost:3000 -> host localhost:3000"
 
-  build_web "${API_URL:-${DEV_API_URL:-http://localhost:3000}}"
+  build_web "${API_URL:-${DEV_API_URL:-http://localhost:3000}}" \
+    "${DEV_WEB_URL:-http://localhost:3000}" "${DEV_PLUS_URL:-http://localhost:3001}"
 
   step "Syncing into the Android project"
   # CAP_DEV opens allowMixedContent: the bundle is served from https://localhost
@@ -175,7 +189,8 @@ cmd_dev_android() {
 cmd_dev_ios() {
   need xcodebuild "Install Xcode from the App Store."
 
-  build_web "${API_URL:-${DEV_API_URL:-http://localhost:3000}}"
+  build_web "${API_URL:-${DEV_API_URL:-http://localhost:3000}}" \
+    "${DEV_WEB_URL:-http://localhost:3000}" "${DEV_PLUS_URL:-http://localhost:3001}"
 
   step "Syncing into the iOS project"
   pnpm exec cap sync ios
@@ -204,8 +219,13 @@ assert_release_api_url() {
 }
 
 cmd_release_android() {
-  local url="${API_URL:-${PROD_API_URL:-https://app.animalesko.org}}"
+  local url web plus
+  url="${API_URL:-${PROD_API_URL:-https://app.animalesko.org}}"
+  web="${PROD_WEB_URL:-$url}"
+  plus="${PROD_PLUS_URL:-https://plus.animalesko.org}"
   assert_release_api_url "$url"
+  assert_release_api_url "$web"
+  assert_release_api_url "$plus"
 
   if [ ! -f "$APP_DIR/android/keystore.properties" ] \
      && [ -z "${ANDROID_KEYSTORE_FILE:-}" ]; then
@@ -216,7 +236,7 @@ cmd_release_android() {
   step "Release build"
   cmd_version
 
-  build_web "$url"
+  build_web "$url" "$web" "$plus"
 
   step "Syncing into the Android project"
   # Deliberately without CAP_DEV, so allowMixedContent stays off.
@@ -236,13 +256,18 @@ cmd_release_android() {
 cmd_release_ios() {
   need xcodebuild "Install Xcode from the App Store."
 
-  local url="${API_URL:-${PROD_API_URL:-https://app.animalesko.org}}"
+  local url web plus
+  url="${API_URL:-${PROD_API_URL:-https://app.animalesko.org}}"
+  web="${PROD_WEB_URL:-$url}"
+  plus="${PROD_PLUS_URL:-https://plus.animalesko.org}"
   assert_release_api_url "$url"
+  assert_release_api_url "$web"
+  assert_release_api_url "$plus"
 
   step "Release build"
   cmd_version
 
-  build_web "$url"
+  build_web "$url" "$web" "$plus"
 
   step "Syncing into the iOS project"
   pnpm exec cap sync ios
