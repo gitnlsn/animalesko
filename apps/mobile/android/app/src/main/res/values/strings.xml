@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Animalesko</string>
+    <string name="title_activity_main">Animalesko</string>
+    <string name="package_name">org.animalesko.app</string>
+    <string name="custom_url_scheme">org.animalesko.app</string>
+</resources>

@@ -36,3 +36,9 @@ pnpm-debug.log*
 # progress; each carries its own .git, so committing them would record broken
 # gitlinks rather than files.
 old/
+
+# Android release signing. The upload key proves a build came from us; Play
+# cannot rotate it without support intervention, so it never enters the repo.
+apps/mobile/android/keystore.properties
+*.jks
+*.keystore

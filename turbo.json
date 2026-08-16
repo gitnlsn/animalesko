@@ -16,7 +16,14 @@
     "AUTH_COOKIE_DOMAIN",
     "NEXT_PUBLIC_APP_URL",
     "NEXT_PUBLIC_PLUS_URL",
+    "NEXT_PUBLIC_API_URL",
     "BLOB_READ_WRITE_TOKEN",
+    // Firebase service-account JSON for push delivery. Absent on a fresh clone
+    // and in CI, where sendPush is a deliberate no-op.
+    "FCM_SERVICE_ACCOUNT",
+    // Read by apps/mobile/capacitor.config.ts at `cap sync` time. Opens
+    // mixed-content for a local http dev server; never set for a release.
+    "CAP_DEV",
     // Read only by prisma/seed.ts and prisma/cleanup.ts, which Turborepo does
     // not run — declared here so the lint rule can see them.
     "SEED_CONFIRM",
@@ -49,9 +56,13 @@
         "BETTER_AUTH_SECRET",
         "BETTER_AUTH_URL",
         "NEXT_PUBLIC_APP_URL",
-        "NEXT_PUBLIC_PLUS_URL"
+        "NEXT_PUBLIC_PLUS_URL",
+        // Baked into the native bundle at build time: it is the absolute URL of
+        // the apps/app deployment, and a cached build from a different value
+        // would ship an app pointing at the wrong API.
+        "NEXT_PUBLIC_API_URL"
       ],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "out/**"]
     },
     "dev": {
       "cache": false,
@@ -62,7 +73,14 @@
       "dependsOn": ["^topo"]
     },
     "typecheck": {
-      "dependsOn": ["^build", "^generate"]
+      // `@animalesko/db#generate` is named explicitly, not just reached through
+      // `^generate`. apps/mobile does not depend on the db package — nothing in
+      // a native bundle may import Prisma — but its tsconfig still traverses
+      // into packages/api, which does. Without the explicit edge Turborepo is
+      // free to typecheck mobile while `generate` is rewriting
+      // src/generated/**, and the failure reads as a hundred missing Prisma
+      // types rather than as a race.
+      "dependsOn": ["^build", "^generate", "@animalesko/db#generate"]
     },
     "test": {
       "dependsOn": ["^build", "^generate"],

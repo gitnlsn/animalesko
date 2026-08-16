@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-only manifest overlay.
+
+  Android has blocked cleartext HTTP by default since API 28, and a local dev
+  server is http://. This points debug builds at a network config that permits
+  it for the dev hosts and nothing else.
+
+  It lives in `src/debug` rather than `src/main` on purpose: the merge only
+  happens for the debug variant, so a release build keeps the platform default
+  and there is no way to ship it by accident.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:networkSecurityConfig="@xml/network_security_config_debug"
+        tools:replace="android:networkSecurityConfig" />
+</manifest>

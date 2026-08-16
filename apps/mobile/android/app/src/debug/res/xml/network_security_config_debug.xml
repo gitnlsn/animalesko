@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cleartext HTTP for local development only.
+
+  Scoped to specific hosts rather than `cleartextTrafficPermitted` on the base
+  config, so even a debug build still refuses plain HTTP to anywhere else.
+
+  10.0.2.2 is how the Android emulator reaches the host machine — inside the
+  emulator, `localhost` is the emulator itself, which is the usual reason a dev
+  build appears to have no network at all.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- The host machine, as seen from the standard emulator. -->
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <!-- Genymotion's equivalent. -->
+        <domain includeSubdomains="false">10.0.3.2</domain>
+        <!-- The Capacitor bundle's own origin. -->
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

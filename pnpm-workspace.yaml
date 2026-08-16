@@ -2,12 +2,15 @@ packages:
   - "apps/*"
   - "packages/*"
 
-# Postinstall scripts are blocked by default; these three genuinely need them
-# (Prisma downloads its query engine, esbuild its native binary).
+# Postinstall scripts are blocked by default; these genuinely need them
+# (Prisma downloads its query engine, esbuild its native binary, and sharp —
+# pulled in by @capacitor/assets to generate the icon and splash sets — its
+# libvips bindings).
 allowBuilds:
   "@prisma/engines": true
   esbuild: true
   prisma: true
+  sharp: true
 
 # Keep the toolchain identical across every workspace package.
 catalog:

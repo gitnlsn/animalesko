@@ -1,0 +1,112 @@
+apply plugin: 'com.android.application'
+
+/**
+ * Release signing.
+ *
+ * Play refuses an unsigned bundle, and Gradle's `release` build type is
+ * unsigned unless told otherwise — so without this, `bundleRelease` produces an
+ * artefact that only fails at upload, after the build has succeeded.
+ *
+ * The credentials come from `keystore.properties`, which is gitignored, or from
+ * the environment so CI can supply them as secrets. Neither the keystore nor its
+ * passwords belong in this repository: the upload key is what proves a build is
+ * from you, and Play will not let you rotate it without contacting support.
+ *
+ * To create one:
+ *
+ *   keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA \
+ *     -keysize 2048 -validity 10000 -alias upload
+ *
+ * then write android/keystore.properties:
+ *
+ *   storeFile=../upload-keystore.jks
+ *   storePassword=…
+ *   keyAlias=upload
+ *   keyPassword=…
+ *
+ * With Play App Signing enabled — and it should be — this is only the *upload*
+ * key. Google holds the actual app signing key, so losing this one is
+ * recoverable; losing the app signing key would not be.
+ */
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def resolvedStoreFile = keystoreProperties['storeFile'] ?: System.getenv('ANDROID_KEYSTORE_FILE')
+def resolvedStorePassword = keystoreProperties['storePassword'] ?: System.getenv('ANDROID_KEYSTORE_PASSWORD')
+def resolvedKeyAlias = keystoreProperties['keyAlias'] ?: System.getenv('ANDROID_KEY_ALIAS')
+def resolvedKeyPassword = keystoreProperties['keyPassword'] ?: System.getenv('ANDROID_KEY_PASSWORD')
+def hasReleaseSigning = resolvedStoreFile != null && file(resolvedStoreFile).exists()
+
+android {
+    namespace = "org.animalesko.app"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "org.animalesko.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(resolvedStoreFile)
+                storePassword resolvedStorePassword
+                keyAlias resolvedKeyAlias
+                keyPassword resolvedKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            // Applied only when a keystore is actually present, so a clone
+            // without one still builds debug and still runs the test suite —
+            // it just cannot produce an uploadable bundle, which is correct.
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
