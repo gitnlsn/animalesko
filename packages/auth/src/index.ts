@@ -27,10 +27,23 @@ function origin(value: string | undefined): string | undefined {
 // Set on every Vercel deployment: the deployment's own hostname, and the
 // project's production hostname. Previews get a fresh hostname per commit, so
 // they can only be trusted by deriving them here rather than by configuration.
+//
+// Note both are always the *.vercel.app hostnames. A custom domain attached to
+// the project is invisible to the runtime — nothing in the environment reports
+// it — so serving the same deployment under one is exactly the case that has to
+// be listed explicitly, in AUTH_TRUSTED_ORIGINS below.
 const deploymentUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined;
 const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : undefined;
+
+// Comma-separated escape hatch for origins that can't be derived: custom
+// domains, and any extra alias a deployment answers on. Adding a domain is then
+// an environment change rather than a code change.
+const extraOrigins = (process.env.AUTH_TRUSTED_ORIGINS ?? "")
+  .split(",")
+  .map(origin)
+  .filter((value): value is string => Boolean(value));
 
 const appUrl = origin(process.env.NEXT_PUBLIC_APP_URL) ?? productionUrl ?? "http://localhost:3000";
 const plusUrl = origin(process.env.NEXT_PUBLIC_PLUS_URL) ?? "http://localhost:3001";
@@ -94,7 +107,7 @@ export const auth = betterAuth({
   // Both origins must be trusted or cross-app sign-in is rejected as CSRF. The
   // Vercel hostnames are included so preview deployments — and the production
   // alias, before a custom domain exists — can sign in without extra config.
-  trustedOrigins: [appUrl, plusUrl, deploymentUrl, productionUrl].filter(
+  trustedOrigins: [appUrl, plusUrl, deploymentUrl, productionUrl, ...extraOrigins].filter(
     (value): value is string => Boolean(value),
   ),
 

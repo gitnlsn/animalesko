@@ -1,0 +1,13 @@
+# Vercel builds from source, so nothing generated needs uploading. Without this
+# the CLI packs the local .next directories (~2 GB across both apps) and a
+# `vercel deploy` from a developer machine fails the 100 MB upload limit.
+.next
+.turbo
+node_modules
+*.tsbuildinfo
+
+# Local-only: the Postgres compose stack, and the two Lovable prototypes kept
+# as reference during the port.
+docker
+docker-compose.yml
+old
