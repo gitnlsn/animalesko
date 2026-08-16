@@ -1,9 +1,9 @@
 import { auth } from "@animalesko/auth";
 import { headers } from "next/headers";
 
-import { AppHeader } from "~/components/app-header.tsx";
-import { BottomNav } from "~/components/bottom-nav.tsx";
-import { SessionProvider } from "~/lib/session-context.tsx";
+import { AppHeader } from "@animalesko/features/app-header";
+import { BottomNav } from "@animalesko/features/bottom-nav";
+import { SessionProvider } from "@animalesko/features";
 
 /**
  * The four-tab shell: sticky gradient header, `max-w-md` column, fixed bottom

@@ -23,7 +23,8 @@ export function PageHeader({ title, subtitle, backTo, actions }: PageHeaderProps
 
   return (
     <header className="sticky top-0 z-40 bg-gradient-primary text-primary-foreground shadow-brand-md">
-      <div className="mx-auto flex max-w-md items-center gap-3 p-4">
+      {/* Top inset for the native status bar — see `app-header.tsx`. */}
+      <div className="mx-auto flex max-w-md items-center gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
         <Button
           variant="ghost"
           size="icon"

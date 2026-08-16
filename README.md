@@ -3,15 +3,17 @@
 pnpm monorepo for the two Animalesko applications, sharing one database, one
 API layer and one design system.
 
-| Workspace         | What it is                                                                        | Port   |
-| ----------------- | --------------------------------------------------------------------------------- | ------ |
-| `apps/app`        | **Consumer.** Tutors adopt pets, book services, report lost pets, chat, review.   | `3000` |
-| `apps/plus`       | **Provider.** Shelters, clinics, petshops and autonomous providers manage supply. | `3001` |
-| `packages/db`     | Prisma schema, migrations, seed, client singleton, test helpers.                  | —      |
-| `packages/api`    | tRPC routers, Zod contracts, authorisation.                                       | —      |
-| `packages/auth`   | Better Auth instance shared by both apps.                                         | —      |
-| `packages/ui`     | Design tokens and shared components.                                              | —      |
-| `packages/config` | tsconfig / ESLint presets.                                                        | —      |
+| Workspace           | What it is                                                                        | Port   |
+| ------------------- | --------------------------------------------------------------------------------- | ------ |
+| `apps/app`          | **Consumer.** Tutors adopt pets, book services, report lost pets, chat, review.   | `3000` |
+| `apps/plus`         | **Provider.** Shelters, clinics, petshops and autonomous providers manage supply. | `3001` |
+| `apps/mobile`       | **Consumer, native.** `apps/app` as iOS/Android binaries — see its README.        | `3002` |
+| `packages/db`       | Prisma schema, migrations, seed, client singleton, test helpers.                  | —      |
+| `packages/api`      | tRPC routers, Zod contracts, authorisation.                                       | —      |
+| `packages/auth`     | Better Auth instance shared by both apps.                                         | —      |
+| `packages/features` | The consumer screens, shared by `apps/app` and `apps/mobile`.                     | —      |
+| `packages/ui`       | Design tokens and shared components.                                              | —      |
+| `packages/config`   | tsconfig / ESLint presets.                                                        | —      |
 
 The two apps are **two Vercel projects from one repo**. They are separate
 deployments that read and write the same Postgres: what a provider publishes in

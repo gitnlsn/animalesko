@@ -7,8 +7,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { SEX_LABELS, SIZE_LABELS, petImage } from "~/lib/display.ts";
-import { useFavorites } from "~/lib/use-favorites.ts";
+import { SEX_LABELS, SIZE_LABELS, petImage } from "../lib/display.ts";
+import { getPlatform } from "../lib/platform.ts";
+import { useFavorites } from "../lib/use-favorites.ts";
 
 import type { PublicListingDTO } from "@animalesko/api";
 
@@ -31,23 +32,22 @@ export function PetCard({ listing }: { listing: PublicListingDTO }) {
     event.preventDefault();
     event.stopPropagation();
 
-    const url = `${window.location.origin}${href}`;
-    const data = {
-      title: `Conheça ${listing.pet.name}!`,
-      text: `🐾 ${listing.summary}\n\nDisponível para adoção na Animalesko 💚`,
-      url,
-    };
+    // Not `window.location.origin`: inside the native WebView that is
+    // `capacitor://localhost`, and a shared link has to open the website — which
+    // is also what serves the OpenGraph tags a WhatsApp preview reads.
+    const platform = getPlatform();
+    const url = platform.publicUrl(href);
 
-    // navigator.share is unavailable on desktop browsers and outside secure
+    // The share sheet is unavailable on desktop browsers and outside secure
     // contexts, so the clipboard is the fallback rather than an error.
-    if (navigator.share) {
-      try {
-        await navigator.share(data);
-        return;
-      } catch (error) {
-        // The user dismissing the sheet is not a failure worth reporting.
-        if ((error as Error).name === "AbortError") return;
-      }
+    if (
+      await platform.share({
+        title: `Conheça ${listing.pet.name}!`,
+        text: `🐾 ${listing.summary}\n\nDisponível para adoção na Animalesko 💚`,
+        url,
+      })
+    ) {
+      return;
     }
 
     await navigator.clipboard.writeText(url);

@@ -6,8 +6,8 @@ import { Heart, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { petImage } from "~/lib/display.ts";
-import { useFavorites } from "~/lib/use-favorites.ts";
+import { petImage } from "../lib/display.ts";
+import { useFavorites } from "../lib/use-favorites.ts";
 
 import type { PublicListingDTO } from "@animalesko/api";
 

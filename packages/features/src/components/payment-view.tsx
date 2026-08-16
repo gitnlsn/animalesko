@@ -27,8 +27,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import { formatDateTimePtBR } from "~/lib/display.ts";
-import { useTRPC } from "~/trpc/react.tsx";
+import { formatDateTimePtBR } from "../lib/display.ts";
+import { useTRPC } from "../trpc.ts";
 
 const METHOD_ICONS: Record<PaymentMethod, typeof CreditCard> = {
   PIX: QrCode,

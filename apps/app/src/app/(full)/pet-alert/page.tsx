@@ -1,5 +1,5 @@
-import { PageHeader } from "~/components/page-header.tsx";
-import { PetAlertBoard } from "~/components/pet-alert-board.tsx";
+import { PageHeader } from "@animalesko/features/page-header";
+import { PetAlertBoard } from "@animalesko/features/pet-alert-board";
 
 import type { Metadata } from "next";
 

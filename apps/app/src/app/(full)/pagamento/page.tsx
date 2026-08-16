@@ -1,5 +1,5 @@
-import { PageHeader } from "~/components/page-header.tsx";
-import { PaymentView } from "~/components/payment-view.tsx";
+import { PageHeader } from "@animalesko/features/page-header";
+import { PaymentView } from "@animalesko/features/payment-view";
 import { requireSession } from "~/lib/require-session.ts";
 
 import type { Metadata } from "next";

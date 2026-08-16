@@ -34,8 +34,8 @@ import { useState } from "react";
 import { GamificationProfile } from "./gamification-profile.tsx";
 import { ProfileForm } from "./profile-form.tsx";
 import { ThemeToggle } from "./theme-toggle.tsx";
-import { signOut } from "~/lib/auth-client.ts";
-import { useTRPC } from "~/trpc/react.tsx";
+import { useAuthClient } from "../lib/auth-context.tsx";
+import { useTRPC } from "../trpc.ts";
 
 /** The prototype's profile menu, plus the pages it never linked to. */
 const LINKS = [
@@ -52,6 +52,7 @@ export function ProfilePanel() {
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { signOut } = useAuthClient();
   const [editOpen, setEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 

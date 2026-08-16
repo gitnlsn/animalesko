@@ -3,9 +3,9 @@ import { Card } from "@animalesko/ui";
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { PawPrint } from "lucide-react";
 
-import { FilterBar } from "~/components/filter-bar.tsx";
-import { ListingSearch } from "~/components/listing-search.tsx";
-import { PetCard } from "~/components/pet-card.tsx";
+import { FilterBar } from "@animalesko/features/filter-bar";
+import { ListingSearch } from "@animalesko/features/listing-search";
+import { PetCard } from "@animalesko/features/pet-card";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 
 import type { Metadata } from "next";

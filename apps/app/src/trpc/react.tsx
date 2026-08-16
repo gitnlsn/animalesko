@@ -5,15 +5,19 @@
 // and therefore Prisma and pg — into the browser bundle.
 import type { AppRouter } from "@animalesko/api/app";
 
+import { AuthClientProvider, TRPCProvider } from "@animalesko/features";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchStreamLink, loggerLink } from "@trpc/client";
-import { createTRPCContext } from "@trpc/tanstack-react-query";
 import { useState } from "react";
 import superjson from "superjson";
 
+import { authClient } from "~/lib/auth-client.ts";
 import { createQueryClient } from "./query-client.ts";
 
-export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRouter>();
+// `useTRPC` is re-exported so the app's own modules keep a single import site,
+// but the context itself lives in @animalesko/features — the shared components
+// and this provider have to be talking about the same React context.
+export { useTRPC, useTRPCClient } from "@animalesko/features";
 
 let browserQueryClient: QueryClient | undefined;
 
@@ -84,7 +88,7 @@ export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-        {children}
+        <AuthClientProvider client={authClient}>{children}</AuthClientProvider>
       </TRPCProvider>
     </QueryClientProvider>
   );

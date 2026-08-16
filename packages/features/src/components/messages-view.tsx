@@ -18,8 +18,8 @@ import { ArrowLeft, MapPin, MessageCircle, Send } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { useSession } from "~/lib/session-context.tsx";
-import { useTRPC } from "~/trpc/react.tsx";
+import { useSession } from "../lib/session-context.tsx";
+import { useTRPC } from "../trpc.ts";
 
 /** How often an open thread re-polls. */
 const THREAD_POLL_MS = 5_000;

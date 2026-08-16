@@ -20,8 +20,8 @@ import { Star } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import { formatDatePtBR } from "~/lib/display.ts";
-import { useTRPC } from "~/trpc/react.tsx";
+import { formatDatePtBR } from "../lib/display.ts";
+import { useTRPC } from "../trpc.ts";
 
 /** A 1–5 star input. Radio group semantics, so it is keyboard-operable. */
 function StarRating({

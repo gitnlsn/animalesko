@@ -5,7 +5,7 @@ import { Badge, Card, Progress, cn } from "@animalesko/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Award, Trophy } from "lucide-react";
 
-import { useTRPC } from "~/trpc/react.tsx";
+import { useTRPC } from "../trpc.ts";
 
 /**
  * "Pontos Aumigos".

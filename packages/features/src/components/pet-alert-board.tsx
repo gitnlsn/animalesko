@@ -43,9 +43,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { formatDatePtBR, SPECIES_EMOJI, SPECIES_LABELS } from "~/lib/display.ts";
-import { useSession } from "~/lib/session-context.tsx";
-import { useTRPC } from "~/trpc/react.tsx";
+import { formatDatePtBR, SPECIES_EMOJI, SPECIES_LABELS } from "../lib/display.ts";
+import { getPlatform } from "../lib/platform.ts";
+import { useSession } from "../lib/session-context.tsx";
+import { useTRPC } from "../trpc.ts";
 
 import type { AlertDTO } from "@animalesko/api";
 
@@ -77,15 +78,24 @@ export function PetAlertBoard() {
 
   // Asked for once, on mount. Denying it — or having no Geolocation API at all
   // — is a normal outcome rather than an error: the board still works, centred
-  // on the fallback. Nothing is set synchronously here, only from the callback,
-  // so this does not cascade a render.
+  // on the fallback. Nothing is set synchronously here, only from the resolved
+  // promise, so this does not cascade a render.
+  //
+  // Goes through the platform adapter because the native build has to ask
+  // Capacitor, which in turn triggers the OS permission sheet.
   useEffect(() => {
-    navigator.geolocation?.getCurrentPosition(
-      (position) => setCenter([position.coords.latitude, position.coords.longitude]),
-      // Permission denied or timed out; the fallback centre stands.
-      () => undefined,
-      { timeout: 8000 },
-    );
+    let cancelled = false;
+
+    void getPlatform()
+      .getCurrentPosition()
+      .then((position) => {
+        if (cancelled || !position) return;
+        setCenter([position.latitude, position.longitude]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const alerts = useQuery(

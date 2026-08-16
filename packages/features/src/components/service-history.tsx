@@ -31,8 +31,8 @@ import { Calendar, CreditCard, MapPin, Star, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import { formatDateTimePtBR, formatMonthPtBR } from "~/lib/display.ts";
-import { useTRPC } from "~/trpc/react.tsx";
+import { formatDateTimePtBR, formatMonthPtBR } from "../lib/display.ts";
+import { useTRPC } from "../trpc.ts";
 
 import type { BookingDTO } from "@animalesko/api";
 

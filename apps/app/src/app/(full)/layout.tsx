@@ -1,7 +1,7 @@
 import { auth } from "@animalesko/auth";
 import { headers } from "next/headers";
 
-import { SessionProvider } from "~/lib/session-context.tsx";
+import { SessionProvider } from "@animalesko/features";
 
 /**
  * The secondary pages — favourites, history, Pet Alert, a listing — which the

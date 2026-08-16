@@ -31,9 +31,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { formatShortDatePtBR, SPECIES_EMOJI } from "~/lib/display.ts";
-import { useSession } from "~/lib/session-context.tsx";
-import { useTRPC } from "~/trpc/react.tsx";
+import { formatShortDatePtBR, SPECIES_EMOJI } from "../lib/display.ts";
+import { useSession } from "../lib/session-context.tsx";
+import { useTRPC } from "../trpc.ts";
 
 import type { PublicOfferingDTO } from "@animalesko/api";
 import type { DateRange } from "@animalesko/ui";

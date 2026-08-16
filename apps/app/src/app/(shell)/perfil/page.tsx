@@ -3,7 +3,7 @@ import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { ProfilePanel } from "~/components/profile-panel.tsx";
+import { ProfilePanel } from "@animalesko/features/profile-panel";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 
 import type { Metadata } from "next";

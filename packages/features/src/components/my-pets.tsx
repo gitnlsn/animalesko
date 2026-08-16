@@ -23,8 +23,8 @@ import { Crown, PawPrint, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { PetForm } from "./pet-form.tsx";
-import { SPECIES_EMOJI, SPECIES_LABELS } from "~/lib/display.ts";
-import { useTRPC } from "~/trpc/react.tsx";
+import { SPECIES_EMOJI, SPECIES_LABELS } from "../lib/display.ts";
+import { useTRPC } from "../trpc.ts";
 
 import type { PetDTO } from "@animalesko/api";
 

@@ -1,6 +1,6 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 
-import { ServicesBrowser } from "~/components/services-browser.tsx";
+import { ServicesBrowser } from "@animalesko/features/services-browser";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 
 import type { Metadata } from "next";

@@ -14,7 +14,7 @@ import { Bell, CheckCheck, Calendar, Heart, Clock, MessageCircle, Siren, Info } 
 import Link from "next/link";
 import { useState } from "react";
 
-import { useTRPC } from "~/trpc/react.tsx";
+import { useTRPC } from "../trpc.ts";
 
 import type { NotificationType } from "@animalesko/api/schemas";
 

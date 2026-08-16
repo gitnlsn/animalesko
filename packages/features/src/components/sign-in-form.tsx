@@ -22,7 +22,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { signIn, signUp } from "~/lib/auth-client.ts";
+import { useAuthClient } from "../lib/auth-context.tsx";
 
 // One schema for both modes. Swapping the resolver on a mode toggle changes
 // the form's value type mid-render, which react-hook-form cannot type; `name`
@@ -37,6 +37,7 @@ type CredentialsValues = z.infer<typeof credentialsSchema>;
 
 export function SignInForm({ next }: { next: string }) {
   const router = useRouter();
+  const { signIn, signUp } = useAuthClient();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [pending, setPending] = useState(false);
 

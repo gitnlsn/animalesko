@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import "leaflet/dist/leaflet.css";
 import "~/styles/leaflet.css";
 
-import { SPECIES_EMOJI } from "~/lib/display.ts";
+import { SPECIES_EMOJI } from "../lib/display.ts";
 
 import type { AlertDTO } from "@animalesko/api";
 

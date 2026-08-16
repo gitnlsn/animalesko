@@ -10,7 +10,7 @@ import {
 import { BadgeCheck, ExternalLink, FileText, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
-import { PageHeader } from "~/components/page-header.tsx";
+import { PageHeader } from "@animalesko/features/page-header";
 import { requireSession } from "~/lib/require-session.ts";
 
 import type { Metadata } from "next";

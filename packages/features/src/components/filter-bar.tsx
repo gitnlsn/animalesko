@@ -16,7 +16,7 @@ import { Filter, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import { SEX_LABELS, SIZE_LABELS, SPECIES_LABELS } from "~/lib/display.ts";
+import { SEX_LABELS, SIZE_LABELS, SPECIES_LABELS } from "../lib/display.ts";
 
 const ANY = "all";
 

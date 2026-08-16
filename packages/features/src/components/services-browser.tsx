@@ -7,7 +7,7 @@ import { useState } from "react";
 
 import { BookingDialog } from "./booking-dialog.tsx";
 import { ServiceCard } from "./service-card.tsx";
-import { useTRPC } from "~/trpc/react.tsx";
+import { useTRPC } from "../trpc.ts";
 
 import type { PublicOfferingDTO } from "@animalesko/api";
 import type { ServiceType } from "@animalesko/api/schemas";

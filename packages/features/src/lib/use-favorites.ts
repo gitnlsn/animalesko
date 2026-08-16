@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 import { useSession } from "./session-context.tsx";
-import { useTRPC } from "~/trpc/react.tsx";
+import { useTRPC } from "../trpc.ts";
 
 /**
  * Favourite state for a whole grid, from one request.

@@ -1,7 +1,7 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 
-import { MessagesView } from "~/components/messages-view.tsx";
-import { PageHeader } from "~/components/page-header.tsx";
+import { MessagesView } from "@animalesko/features/messages-view";
+import { PageHeader } from "@animalesko/features/page-header";
 import { requireSession } from "~/lib/require-session.ts";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 

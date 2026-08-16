@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { notFound } from "next/navigation";
 
-import { ListingDetail } from "~/components/listing-detail.tsx";
+import { ListingDetail } from "@animalesko/features/listing-detail";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 
 import type { Metadata } from "next";

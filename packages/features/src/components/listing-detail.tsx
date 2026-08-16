@@ -33,10 +33,11 @@ import { useState } from "react";
 
 import { PageHeader } from "./page-header.tsx";
 import { PetCard } from "./pet-card.tsx";
-import { PLACEHOLDER_PET_IMAGE, SEX_LABELS, SIZE_LABELS, SPECIES_LABELS } from "~/lib/display.ts";
-import { useSession } from "~/lib/session-context.tsx";
-import { useFavorites } from "~/lib/use-favorites.ts";
-import { useTRPC } from "~/trpc/react.tsx";
+import { PLACEHOLDER_PET_IMAGE, SEX_LABELS, SIZE_LABELS, SPECIES_LABELS } from "../lib/display.ts";
+import { getPlatform } from "../lib/platform.ts";
+import { useSession } from "../lib/session-context.tsx";
+import { useFavorites } from "../lib/use-favorites.ts";
+import { useTRPC } from "../trpc.ts";
 
 import type { ListingDetailDTO, PublicListingDTO } from "@animalesko/api";
 
@@ -103,20 +104,19 @@ export function ListingDetail({ listing, siblings }: ListingDetailProps) {
   }
 
   async function share() {
-    const url = `${window.location.origin}${href}`;
-    const data = {
-      title: `Conheça ${listing.pet.name}!`,
-      text: `🐾 ${listing.summary}\n\nDisponível para adoção na Animalesko 💚`,
-      url,
-    };
+    // Via the platform adapter so the native build gets the OS share sheet and
+    // a URL pointing at the website rather than at capacitor://localhost.
+    const platform = getPlatform();
+    const url = platform.publicUrl(href);
 
-    if (navigator.share) {
-      try {
-        await navigator.share(data);
-        return;
-      } catch (error) {
-        if ((error as Error).name === "AbortError") return;
-      }
+    if (
+      await platform.share({
+        title: `Conheça ${listing.pet.name}!`,
+        text: `🐾 ${listing.summary}\n\nDisponível para adoção na Animalesko 💚`,
+        url,
+      })
+    ) {
+      return;
     }
 
     await navigator.clipboard.writeText(url);

@@ -1,4 +1,4 @@
-import { SignInForm } from "~/components/sign-in-form.tsx";
+import { SignInForm } from "@animalesko/features/sign-in-form";
 
 import type { Metadata } from "next";
 

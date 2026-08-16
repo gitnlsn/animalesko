@@ -1,5 +1,5 @@
-import { PageHeader } from "~/components/page-header.tsx";
-import { SupportView } from "~/components/support-view.tsx";
+import { PageHeader } from "@animalesko/features/page-header";
+import { SupportView } from "@animalesko/features/support-view";
 
 import type { Metadata } from "next";
 

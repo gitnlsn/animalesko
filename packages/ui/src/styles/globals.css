@@ -12,8 +12,11 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Both apps' sources plus this package, since Tailwind 4 scans from the entry. */
+/* Both apps' sources plus this package, since Tailwind 4 scans from the entry.
+   `features` holds the shared screens, so its classes have to be scanned too —
+   they are no longer inside an app. */
 @source "../../../../apps/*/src/**/*.{ts,tsx}";
+@source "../../../features/src/**/*.tsx";
 @source "../components/**/*.tsx";
 
 :root {

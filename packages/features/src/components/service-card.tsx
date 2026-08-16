@@ -4,7 +4,7 @@ import { formatPrice } from "@animalesko/api/schemas";
 import { Badge, Button, Card, cn } from "@animalesko/ui";
 import { BadgeCheck, Calendar, Clock, Heart, Star } from "lucide-react";
 
-import { useFavorites } from "~/lib/use-favorites.ts";
+import { useFavorites } from "../lib/use-favorites.ts";
 
 import type { PublicOfferingDTO } from "@animalesko/api";
 

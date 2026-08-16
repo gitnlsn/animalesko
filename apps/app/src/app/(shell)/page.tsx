@@ -3,9 +3,9 @@ import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { Calendar, Heart } from "lucide-react";
 import Link from "next/link";
 
-import { PetCard } from "~/components/pet-card.tsx";
-import { PetOfTheDay } from "~/components/pet-of-the-day.tsx";
-import { StatsCard } from "~/components/stats-card.tsx";
+import { PetCard } from "@animalesko/features/pet-card";
+import { PetOfTheDay } from "@animalesko/features/pet-of-the-day";
+import { StatsCard } from "@animalesko/features/stats-card";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 
 /**

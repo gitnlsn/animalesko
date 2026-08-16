@@ -35,7 +35,13 @@ const config: NextConfig = {
 
   // Workspace packages are published as TypeScript source, so Next compiles
   // them itself instead of expecting pre-built JavaScript.
-  transpilePackages: ["@animalesko/api", "@animalesko/auth", "@animalesko/db", "@animalesko/ui"],
+  transpilePackages: [
+    "@animalesko/api",
+    "@animalesko/auth",
+    "@animalesko/db",
+    "@animalesko/features",
+    "@animalesko/ui",
+  ],
 
   // Prisma's client and the pg driver must stay external: bundling them breaks
   // their dynamic requires and Node built-in usage.
