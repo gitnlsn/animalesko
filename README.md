@@ -214,7 +214,7 @@ DATABASE_URL          # pooled connection
 DIRECT_DATABASE_URL   # unpooled — used by migrations
 BETTER_AUTH_SECRET    # openssl rand -base64 32; identical in both projects
 BETTER_AUTH_URL       # that project's own public URL
-AUTH_COOKIE_DOMAIN    # e.g. .animalesko.com — enables one session across both
+AUTH_COOKIE_DOMAIN    # e.g. .animalesko.org — enables one session across both
 NEXT_PUBLIC_APP_URL
 NEXT_PUBLIC_PLUS_URL
 BLOB_READ_WRITE_TOKEN # apps/plus only — listing photos and verification docs

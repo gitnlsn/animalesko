@@ -86,7 +86,7 @@ ${BOLD}Animalesko mobile${OFF}
   ${BOLD}Environment${OFF}
     API_URL            Override the API the build points at
     DEV_API_URL        Dev default (http://localhost:3000)
-    PROD_API_URL       Release default (https://app.animalesko.com)
+    PROD_API_URL       Release default (https://app.animalesko.org)
 EOF
 }
 
@@ -204,7 +204,7 @@ assert_release_api_url() {
 }
 
 cmd_release_android() {
-  local url="${API_URL:-${PROD_API_URL:-https://app.animalesko.com}}"
+  local url="${API_URL:-${PROD_API_URL:-https://app.animalesko.org}}"
   assert_release_api_url "$url"
 
   if [ ! -f "$APP_DIR/android/keystore.properties" ] \
@@ -236,7 +236,7 @@ cmd_release_android() {
 cmd_release_ios() {
   need xcodebuild "Install Xcode from the App Store."
 
-  local url="${API_URL:-${PROD_API_URL:-https://app.animalesko.com}}"
+  local url="${API_URL:-${PROD_API_URL:-https://app.animalesko.org}}"
   assert_release_api_url "$url"
 
   step "Release build"

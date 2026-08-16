@@ -30,7 +30,7 @@ export default function VerificationPage() {
 
   const organizations = session.data?.organizations ?? [];
   const isProvider = organizations.length > 0;
-  const plusUrl = process.env.NEXT_PUBLIC_PLUS_URL ?? "https://plus.animalesko.com";
+  const plusUrl = process.env.NEXT_PUBLIC_PLUS_URL ?? "https://plus.animalesko.org";
 
   return (
     <Gated next="/verificacao">

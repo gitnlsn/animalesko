@@ -34,11 +34,19 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
-def resolvedStoreFile = keystoreProperties['storeFile'] ?: System.getenv('ANDROID_KEYSTORE_FILE')
+def rawStoreFile = keystoreProperties['storeFile'] ?: System.getenv('ANDROID_KEYSTORE_FILE')
 def resolvedStorePassword = keystoreProperties['storePassword'] ?: System.getenv('ANDROID_KEYSTORE_PASSWORD')
 def resolvedKeyAlias = keystoreProperties['keyAlias'] ?: System.getenv('ANDROID_KEY_ALIAS')
 def resolvedKeyPassword = keystoreProperties['keyPassword'] ?: System.getenv('ANDROID_KEY_PASSWORD')
-def hasReleaseSigning = resolvedStoreFile != null && file(resolvedStoreFile).exists()
+
+// Resolved against `android/`, next to keystore.properties itself, rather than
+// against `android/app/` where this file happens to live. A relative path in a
+// config file should be relative to that config file; anything else is a
+// guessing game whose only symptom is "no signing key" on a key that exists.
+// Absolute paths pass through untouched, which is what CI will use.
+def resolvedStoreFile = rawStoreFile == null ? null
+    : (new File(rawStoreFile).isAbsolute() ? new File(rawStoreFile) : rootProject.file(rawStoreFile))
+def hasReleaseSigning = resolvedStoreFile != null && resolvedStoreFile.exists()
 
 android {
     namespace = "org.animalesko.app"
@@ -59,7 +67,7 @@ android {
     signingConfigs {
         if (hasReleaseSigning) {
             release {
-                storeFile file(resolvedStoreFile)
+                storeFile resolvedStoreFile
                 storePassword resolvedStorePassword
                 keyAlias resolvedKeyAlias
                 keyPassword resolvedKeyPassword

@@ -15,7 +15,7 @@ const configured = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, "");
 
 if (!configured) {
   throw new Error(
-    "NEXT_PUBLIC_API_URL is required to build the mobile app — it is the absolute URL of the apps/app deployment (e.g. https://app.animalesko.com).",
+    "NEXT_PUBLIC_API_URL is required to build the mobile app — it is the absolute URL of the apps/app deployment (e.g. https://app.animalesko.org).",
   );
 }
 

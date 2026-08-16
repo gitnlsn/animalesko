@@ -106,7 +106,7 @@ pnpm release:ios          # -> opens Xcode; Product > Archive > Distribute
 never report different versions for the same build.
 
 Both release commands build against `PROD_API_URL`
-(default `https://app.animalesko.com`) and deliberately **without** `CAP_DEV`.
+(default `https://app.animalesko.org`) and deliberately **without** `CAP_DEV`.
 
 ### One-time setup before the first release
 

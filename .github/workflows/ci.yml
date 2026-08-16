@@ -65,7 +65,16 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm test:integration
+
+      # apps/mobile refuses to build without NEXT_PUBLIC_API_URL: it is inlined
+      # into the bundle at build time and decides which server the shipped app
+      # talks to, so a build that silently defaulted would produce an app
+      # pointing at nothing. CI only needs to prove the bundle compiles, and the
+      # value never leaves the runner — release builds set it explicitly through
+      # apps/mobile/scripts/mobile.sh.
       - run: pnpm build
+        env:
+          NEXT_PUBLIC_API_URL: https://app.animalesko.org
 
   # Applies pending migrations to the Neon production database.
   #

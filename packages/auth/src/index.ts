@@ -92,9 +92,9 @@ const baseUrl =
  * One Better Auth instance, mounted by both apps.
  *
  * Sessions are deliberately shared: a provider who is also a tutor signs in
- * once and moves between app.animalesko.com and plus.animalesko.com without
+ * once and moves between app.animalesko.org and plus.animalesko.org without
  * re-authenticating. In production that requires AUTH_COOKIE_DOMAIN to be set
- * to the registrable parent domain (".animalesko.com").
+ * to the registrable parent domain (".animalesko.org").
  */
 export const auth = betterAuth({
   appName: "Animalesko",
@@ -197,7 +197,7 @@ export const auth = betterAuth({
      * Token sessions for the native apps.
      *
      * A Capacitor WebView serves the bundle from `capacitor://localhost`, so a
-     * cookie scoped to `.animalesko.com` is never sent to the API — the whole
+     * cookie scoped to `.animalesko.org` is never sent to the API — the whole
      * cookie mechanism the web apps rely on is unavailable there. This plugin
      * accepts `Authorization: Bearer <session token>` and converts it into the
      * session cookie the rest of the stack already expects, so every
