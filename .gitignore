@@ -14,6 +14,13 @@ build/
 packages/db/src/generated/
 coverage/
 
+# Written by Next itself, and written *differently* by each command: `next dev`
+# points it at .next/dev/types, `next build` at .next/types. Tracked, it flips
+# back and forth and shows up dirty after whichever ran last. It carries a
+# "should not be edited" notice, every command regenerates it, and typecheck
+# passes without it on a fresh clone — so it is not tracked.
+next-env.d.ts
+
 # env
 .env
 .env.local
