@@ -42,3 +42,7 @@ old/
 apps/mobile/android/keystore.properties
 *.jks
 *.keystore
+
+
+CLAUDE.md
+.rtk
