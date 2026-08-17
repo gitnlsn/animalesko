@@ -1,7 +1,6 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 
-import { PageHeader } from "@animalesko/features/page-header";
-import { ReviewsView } from "@animalesko/features/reviews-view";
+import { ReviewsScreen } from "@animalesko/features/reviews-screen";
 import { requireSession } from "~/lib/require-session.ts";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 
@@ -21,10 +20,7 @@ export default async function ReviewsPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <PageHeader title="Avaliações" subtitle="O que você achou dos serviços" backTo="/perfil" />
-      <main className="mx-auto max-w-md p-4">
-        <ReviewsView />
-      </main>
+      <ReviewsScreen />
     </HydrationBoundary>
   );
 }

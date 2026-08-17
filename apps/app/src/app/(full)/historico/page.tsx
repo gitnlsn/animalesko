@@ -1,8 +1,7 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 
-import { PageHeader } from "@animalesko/features/page-header";
+import { HistoryScreen } from "@animalesko/features/history-screen";
 import { HISTORY_BOOKINGS_LIMIT } from "@animalesko/features/query-inputs";
-import { ServiceHistory } from "@animalesko/features/service-history";
 import { requireSession } from "~/lib/require-session.ts";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 
@@ -22,14 +21,7 @@ export default async function ServiceHistoryPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <PageHeader
-        title="Histórico de serviços"
-        subtitle="Tudo que você já agendou"
-        backTo="/perfil"
-      />
-      <main className="mx-auto max-w-md p-4">
-        <ServiceHistory />
-      </main>
+      <HistoryScreen />
     </HydrationBoundary>
   );
 }
