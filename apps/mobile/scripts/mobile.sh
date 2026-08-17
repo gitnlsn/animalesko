@@ -69,6 +69,7 @@ build_web() {
   NEXT_PUBLIC_API_URL="$api_url" \
   NEXT_PUBLIC_APP_URL="$web_url" \
   NEXT_PUBLIC_PLUS_URL="$plus_url" \
+  NEXT_PUBLIC_PUSH_ENABLED="${PUSH_ENABLED:-false}" \
     pnpm exec next build
 
   [ -d "$APP_DIR/out" ] || die "next build produced no out/ directory."
@@ -100,6 +101,7 @@ ${BOLD}Animalesko mobile${OFF}
     PROD_API_URL       Release default (https://app.animalesko.org)
     PROD_WEB_URL       Origin for share/deep links (defaults to PROD_API_URL)
     PROD_PLUS_URL      Provider app (https://plus.animalesko.org)
+    PUSH_ENABLED       true once Firebase/APNs credentials are in place (default false)
 EOF
 }
 

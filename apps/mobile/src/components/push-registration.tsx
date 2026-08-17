@@ -10,6 +10,27 @@ import { useTRPC } from "~/trpc/react.tsx";
 import { useMutation } from "@tanstack/react-query";
 
 /**
+ * Whether this build can actually deliver a push notification.
+ *
+ * Off unless the build says otherwise, and that default is not caution for its
+ * own sake. `PushNotifications.register()` reaches straight for Firebase, and
+ * on Android with no `google-services.json` that throws
+ * `Default FirebaseApp is not initialized` on a plugin thread — an uncaught
+ * native exception that kills the app. Not a rejected promise: a crash, on the
+ * screen right after sign-in, that no JavaScript `try/catch` can intercept.
+ *
+ * It also fixes the softer problem underneath. Asking for notification
+ * permission while nothing can send one is worse than not asking — iOS prompts
+ * exactly once per install, so a "no" collected before the feature exists is
+ * spent forever.
+ *
+ * Turn it on with NEXT_PUBLIC_PUSH_ENABLED=true once the Firebase project
+ * exists and `google-services.json` / `GoogleService-Info.plist` are in the
+ * native projects.
+ */
+const PUSH_ENABLED = process.env.NEXT_PUBLIC_PUSH_ENABLED === "true";
+
+/**
  * Registers this device for push once someone is signed in.
  *
  * Renders nothing. Waits for a session on purpose — a token belongs to an
@@ -32,7 +53,7 @@ export function PushRegistration() {
   const wired = useRef(false);
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !signedIn || wired.current) return;
+    if (!PUSH_ENABLED || !Capacitor.isNativePlatform() || !signedIn || wired.current) return;
     wired.current = true;
 
     const platform = Capacitor.getPlatform() === "ios" ? "IOS" : "ANDROID";
@@ -57,9 +78,16 @@ export function PushRegistration() {
     ];
 
     void (async () => {
-      const permission = await PushNotifications.requestPermissions();
-      if (permission.receive !== "granted") return;
-      await PushNotifications.register();
+      try {
+        const permission = await PushNotifications.requestPermissions();
+        if (permission.receive !== "granted") return;
+        await PushNotifications.register();
+      } catch (error) {
+        // Catches the JS-visible failures — a misconfigured APNs entitlement,
+        // a plugin that rejects. It cannot catch a native exception thrown on
+        // the plugin thread, which is why PUSH_ENABLED gates this at all.
+        console.error("Push registration failed", error);
+      }
     })();
 
     return () => {

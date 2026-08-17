@@ -1,12 +1,14 @@
 # App icon pack
 
 Contents:
+
 - `Assets.xcassets/AppIcon.appiconset/` — Xcode asset catalog (Contents.json included)
 - `AppIcon.icon/` — iOS 26 Liquid Glass Icon Composer folder
 - `android/mipmap-*/` + `android/adaptive-foreground.png` — launcher mipmaps and adaptive foreground
 - `appstore.png` / `playstore.png` — store marketing sizes
 
 Wiring:
+
 - Xcode: drop `Assets.xcassets/AppIcon.appiconset/` into the project.
 - Expo: copy `AppIcon.icon/` and `android/adaptive-foreground.png` into `assets/`, then set `"ios": { "icon": "./assets/AppIcon.icon" }` and `"android": { "adaptiveIcon": { "foregroundImage": "./assets/adaptive-foreground.png", "backgroundColor": "#ffffff" } }` in app.json. After wiring: `npx expo prebuild --clean`.
 

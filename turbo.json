@@ -24,6 +24,9 @@
     // Read by apps/mobile/capacitor.config.ts at `cap sync` time. Opens
     // mixed-content for a local http dev server; never set for a release.
     "CAP_DEV",
+    // Gates push registration in apps/mobile. Off by default: calling
+    // register() without Firebase credentials crashes the app natively.
+    "NEXT_PUBLIC_PUSH_ENABLED",
     // Read only by prisma/seed.ts and prisma/cleanup.ts, which Turborepo does
     // not run — declared here so the lint rule can see them.
     "SEED_CONFIRM",

@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./next": "./src/next.ts",
-    "./permissions": "./src/permissions.ts"
+    "./permissions": "./src/permissions.ts",
+    "./cors": "./src/cors.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

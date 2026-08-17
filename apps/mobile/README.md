@@ -149,6 +149,30 @@ Ship to Play **internal testing** and **TestFlight** first. Neither costs a
 review round trip, and both surface the things a simulator cannot — real push
 delivery, real permission prompts, real network conditions.
 
+## Push notifications are off by default
+
+`NEXT_PUBLIC_PUSH_ENABLED` gates registration and defaults to `false`.
+
+That is not caution for its own sake. `PushNotifications.register()` reaches
+straight for Firebase, and on Android with no `google-services.json` it throws
+`Default FirebaseApp is not initialized` on a plugin thread — an uncaught
+native exception that **crashes the app**, on the screen right after sign-in.
+It is not a rejected promise, so no JavaScript `try/catch` can intercept it.
+
+It also avoids spending the permission prompt. iOS asks exactly once per
+install, so a "no" collected while nothing can send a notification is a "no"
+forever.
+
+To turn it on:
+
+1. Create a Firebase project and add both apps (`org.animalesko.app`).
+2. Put `google-services.json` in `android/app/` and
+   `GoogleService-Info.plist` in `ios/App/App/`.
+3. Upload the APNs key to Firebase (needs the Apple Developer account).
+4. Set `FCM_SERVICE_ACCOUNT` on the Vercel project — without it `sendPush` is
+   a deliberate no-op and nothing is delivered.
+5. Build with `PUSH_ENABLED=true`.
+
 ## What forces a new store release — and what does not
 
 This is the useful consequence of keeping the API remote. Where a change lives
