@@ -60,35 +60,35 @@ it carries `{ signedIn, userId, name }` — **not** email or organizations.
 Per-route status (pairs are `apps/app/src/app/<route>/page.tsx` vs
 `apps/mobile/src/app/<route>/page.tsx`):
 
-| Route | Shared view used today | Work |
-|---|---|---|
-| `(shell)` início | mobile: `home-view` · app: **inline duplicate** | Step 2 |
-| `(shell)/adocao` | mobile: `adoption-view` · app: **inline duplicate** | Step 3 |
-| `(shell)/servicos` | both: `services-browser` | none (constants only, Step 1) |
-| `(shell)/perfil` | both: `profile-panel` | **none — already at target** |
-| `entrar` | both: `sign-in-form` | **none — wrappers differ for real reasons** |
-| `(full)/avaliacoes` | both: `reviews-view` | Step 4 (+ copy drift fix) |
-| `(full)/favoritos` | both: `favorites-list` | Step 4 |
-| `(full)/historico` | both: `service-history` | Step 4 |
-| `(full)/mensagens` | both: `messages-view` | Step 4 |
-| `(full)/meus-pets` | both: `my-pets` | Step 4 (subtitle unification) |
-| `(full)/pagamento` | both: `payment-view` | Step 4 |
-| `(full)/pet-alert` | both: `pet-alert-board` (public) | Step 4 |
-| `(full)/suporte` | both: `support-view` (public) | Step 4 |
-| `(full)/verificacao` | **none — ~115 lines duplicated twice** | Step 5 |
-| `(full)/pet/[id]` vs `(full)/pet` | `listing-detail` / `listing-detail-view` | **out of scope** (see below) |
+| Route                             | Shared view used today                              | Work                                        |
+| --------------------------------- | --------------------------------------------------- | ------------------------------------------- |
+| `(shell)` início                  | mobile: `home-view` · app: **inline duplicate**     | Step 2                                      |
+| `(shell)/adocao`                  | mobile: `adoption-view` · app: **inline duplicate** | Step 3                                      |
+| `(shell)/servicos`                | both: `services-browser`                            | none (constants only, Step 1)               |
+| `(shell)/perfil`                  | both: `profile-panel`                               | **none — already at target**                |
+| `entrar`                          | both: `sign-in-form`                                | **none — wrappers differ for real reasons** |
+| `(full)/avaliacoes`               | both: `reviews-view`                                | Step 4 (+ copy drift fix)                   |
+| `(full)/favoritos`                | both: `favorites-list`                              | Step 4                                      |
+| `(full)/historico`                | both: `service-history`                             | Step 4                                      |
+| `(full)/mensagens`                | both: `messages-view`                               | Step 4                                      |
+| `(full)/meus-pets`                | both: `my-pets`                                     | Step 4 (subtitle unification)               |
+| `(full)/pagamento`                | both: `payment-view`                                | Step 4                                      |
+| `(full)/pet-alert`                | both: `pet-alert-board` (public)                    | Step 4                                      |
+| `(full)/suporte`                  | both: `support-view` (public)                       | Step 4                                      |
+| `(full)/verificacao`              | **none — ~115 lines duplicated twice**              | Step 5                                      |
+| `(full)/pet/[id]` vs `(full)/pet` | `listing-detail` / `listing-detail-view`            | **out of scope** (see below)                |
 
 Verified prefetch ↔ view input matches (do not break these):
 
-| Query | Input (verified in both prefetch and view) |
-|---|---|
-| `booking.list` | app prefetches `{ limit: 100 }`; `service-history.tsx:93` queries `{ status, limit: 100 }`. Matches for the default tab because `status` is `undefined` there and TanStack's key hashing drops `undefined` object values. **Do not "fix" this.** |
-| `message.conversations` | `{ limit: 30 }` (`messages-view.tsx:52`) |
-| `pet.list` | `{ includeDeceased: false, limit: 50 }` (`my-pets.tsx:46`) |
-| `pet.quota`, `profile.me`, `review.pending`, `review.mine`, `favorite.listings`, `favorite.offerings`, `favorite.ids` | no input |
-| `gamification.profile` | `{ limit: 5 }` (`gamification-profile.tsx:23`) |
-| `catalog.offerings` | `{ type: "PET_SITTER", limit: 50 }` (first tab; `services-browser.tsx:64` builds `{ type, limit: 50 }`) |
-| `catalog.listings` | home strip `{ limit: 2 }`; adoption `{ ...filters, limit: 50 }` |
+| Query                                                                                                                 | Input (verified in both prefetch and view)                                                                                                                                                                                                       |
+| --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `booking.list`                                                                                                        | app prefetches `{ limit: 100 }`; `service-history.tsx:93` queries `{ status, limit: 100 }`. Matches for the default tab because `status` is `undefined` there and TanStack's key hashing drops `undefined` object values. **Do not "fix" this.** |
+| `message.conversations`                                                                                               | `{ limit: 30 }` (`messages-view.tsx:52`)                                                                                                                                                                                                         |
+| `pet.list`                                                                                                            | `{ includeDeceased: false, limit: 50 }` (`my-pets.tsx:46`)                                                                                                                                                                                       |
+| `pet.quota`, `profile.me`, `review.pending`, `review.mine`, `favorite.listings`, `favorite.offerings`, `favorite.ids` | no input                                                                                                                                                                                                                                         |
+| `gamification.profile`                                                                                                | `{ limit: 5 }` (`gamification-profile.tsx:23`)                                                                                                                                                                                                   |
+| `catalog.offerings`                                                                                                   | `{ type: "PET_SITTER", limit: 50 }` (first tab; `services-browser.tsx:64` builds `{ type, limit: 50 }`)                                                                                                                                          |
+| `catalog.listings`                                                                                                    | home strip `{ limit: 2 }`; adoption `{ ...filters, limit: 50 }`                                                                                                                                                                                  |
 
 Known drift to resolve while executing (product copy decisions — defaults
 chosen here; the human can flip any of them by editing one line afterwards):
@@ -174,6 +174,7 @@ constants (import from `../lib/query-inputs.ts` inside the package, from
 - App shells: `(shell)/servicos/page.tsx`, `(shell)/perfil/page.tsx` (gamification input), `(full)/historico/page.tsx`, `(full)/mensagens/page.tsx`, `(full)/meus-pets/page.tsx` — swap the duplicated literals for the same constants.
 
 Edge cases:
+
 - Do **not** add `as const` to the object constants; the widened types match
   the procedure input types.
 - `message.thread` (`messages-view.tsx:125`) and `payment-view.tsx:66` are
@@ -220,6 +221,7 @@ export default async function HomePage() {
 ```
 
 Edge cases:
+
 - The old page had no `metadata` export (the shell layout provides the title);
   do not add one.
 - Known copy change: the "Rode `pnpm db:seed`" empty state disappears (see
@@ -277,6 +279,7 @@ export default async function AdoptionPage({
 ```
 
 Edge cases:
+
 - The `Suspense` wrapper is required in the static export and harmless here;
   keep it so the page bodies stay identical across hosts.
 - Repeated search params (`?species=DOG&species=CAT`): the server receives an
@@ -298,16 +301,16 @@ For each row, create `packages/features/src/components/<file>.tsx` containing
 from the existing pages (they are already identical between hosts except where
 the drift list says otherwise). Then shrink both page shells.
 
-| New file | Screen export | View inside | Header (title / subtitle / backTo) | Gate |
-|---|---|---|---|---|
-| `reviews-screen.tsx` | `ReviewsScreen` | `ReviewsView` | Avaliações / **"O que você avaliou e o que falta avaliar"** / `/perfil` | gated |
-| `favorites-screen.tsx` | `FavoritesScreen` | `FavoritesList` | Meus favoritos / "Pets e serviços que você guardou" / `/perfil` | gated |
-| `history-screen.tsx` | `HistoryScreen` | `ServiceHistory` | Histórico de serviços / "Tudo que você já agendou" / `/perfil` | gated |
-| `messages-screen.tsx` | `MessagesScreen` | `MessagesView` | Mensagens / "Suas conversas com abrigos e prestadores" / `/perfil` | gated |
-| `my-pets-screen.tsx` | `MyPetsScreen` | `MyPets` | Meus pets / session-derived, see below / `/perfil` | gated |
-| `payment-screen.tsx` | `PaymentScreen` | `PaymentView` | Pagamento / *(no subtitle)* / `/historico` | gated (next=`/historico`) |
-| `pet-alert-screen.tsx` | `PetAlertScreen` | `PetAlertBoard` | Pet Alert / "Ajude a encontrar quem está perdido" / `/perfil` | **public** |
-| `support-screen.tsx` | `SupportScreen` | `SupportView` | Ajuda & suporte / "Estamos por aqui 🐾" / `/perfil` | **public** |
+| New file               | Screen export     | View inside      | Header (title / subtitle / backTo)                                      | Gate                      |
+| ---------------------- | ----------------- | ---------------- | ----------------------------------------------------------------------- | ------------------------- |
+| `reviews-screen.tsx`   | `ReviewsScreen`   | `ReviewsView`    | Avaliações / **"O que você avaliou e o que falta avaliar"** / `/perfil` | gated                     |
+| `favorites-screen.tsx` | `FavoritesScreen` | `FavoritesList`  | Meus favoritos / "Pets e serviços que você guardou" / `/perfil`         | gated                     |
+| `history-screen.tsx`   | `HistoryScreen`   | `ServiceHistory` | Histórico de serviços / "Tudo que você já agendou" / `/perfil`          | gated                     |
+| `messages-screen.tsx`  | `MessagesScreen`  | `MessagesView`   | Mensagens / "Suas conversas com abrigos e prestadores" / `/perfil`      | gated                     |
+| `my-pets-screen.tsx`   | `MyPetsScreen`    | `MyPets`         | Meus pets / session-derived, see below / `/perfil`                      | gated                     |
+| `payment-screen.tsx`   | `PaymentScreen`   | `PaymentView`    | Pagamento / _(no subtitle)_ / `/historico`                              | gated (next=`/historico`) |
+| `pet-alert-screen.tsx` | `PetAlertScreen`  | `PetAlertBoard`  | Pet Alert / "Ajude a encontrar quem está perdido" / `/perfil`           | **public**                |
+| `support-screen.tsx`   | `SupportScreen`   | `SupportView`    | Ajuda & suporte / "Estamos por aqui 🐾" / `/perfil`                     | **public**                |
 
 Template (exactly this shape; `MyPetsScreen` is the one variation):
 
@@ -320,7 +323,11 @@ import { ServiceHistory } from "./service-history.tsx";
 export function HistoryScreen() {
   return (
     <>
-      <PageHeader title="Histórico de serviços" subtitle="Tudo que você já agendou" backTo="/perfil" />
+      <PageHeader
+        title="Histórico de serviços"
+        subtitle="Tudo que você já agendou"
+        backTo="/perfil"
+      />
       <main className="mx-auto max-w-md p-4">
         <ServiceHistory />
       </main>
@@ -334,7 +341,7 @@ the null-safe branch comes from the mobile version and renders identically on
 the web, where the gate guarantees a name):
 
 ```tsx
-const { name } = useSession();   // import { useSession } from "../lib/session-context.tsx";
+const { name } = useSession(); // import { useSession } from "../lib/session-context.tsx";
 // subtitle={name ? `Olá, ${name.split(" ")[0]}` : "Os animais que você cadastrou"}
 ```
 
@@ -487,6 +494,7 @@ export default function VerificationPage() {
 ```
 
 Edge cases:
+
 - `email` must render fine as `undefined` (mobile, during the token check) —
   it sits inside `<CardDescription>{email}</CardDescription>`, which is fine.
 - `target="_blank"` is the unified behavior (drift list). On the web this is a
@@ -548,12 +556,14 @@ console.log(`route parity OK (${app.size} routes)`);
 ```
 
 Wire it up:
+
 - Root `package.json` scripts: `"check:routes": "node scripts/check-route-parity.mjs"`.
 - Add a step to `.github/workflows/ci.yml` next to lint/typecheck:
   `run: node scripts/check-route-parity.mjs` (read the file first and copy the
   formatting of the neighboring jobs/steps).
 
 Edge cases:
+
 - Route groups `(shell)`/`(full)` are part of the compared path on purpose — a
   screen moving between groups changes its chrome and should trip the check.
 - `entrar` exists in both; the script naturally passes it.

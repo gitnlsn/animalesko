@@ -1,6 +1,7 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 
 import { ServicesBrowser } from "@animalesko/features/services-browser";
+import { SERVICES_DEFAULT_TYPE, SERVICES_PAGE_LIMIT } from "@animalesko/features/query-inputs";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 
 import type { Metadata } from "next";
@@ -20,7 +21,10 @@ export default async function ServicesPage() {
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery(
-    trpc.catalog.offerings.queryOptions({ type: "PET_SITTER", limit: 50 }),
+    trpc.catalog.offerings.queryOptions({
+      type: SERVICES_DEFAULT_TYPE,
+      limit: SERVICES_PAGE_LIMIT,
+    }),
   );
 
   return (

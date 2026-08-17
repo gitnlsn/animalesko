@@ -24,6 +24,7 @@ import { useState } from "react";
 
 import { PetForm } from "./pet-form.tsx";
 import { SPECIES_EMOJI, SPECIES_LABELS } from "../lib/display.ts";
+import { MY_PETS_LIST_INPUT } from "../lib/query-inputs.ts";
 import { useTRPC } from "../trpc.ts";
 
 import type { PetDTO } from "@animalesko/api";
@@ -43,7 +44,7 @@ export function MyPets() {
   const [editing, setEditing] = useState<PetDTO | "new" | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PetDTO | null>(null);
 
-  const petsQuery = useQuery(trpc.pet.list.queryOptions({ includeDeceased: false, limit: 50 }));
+  const petsQuery = useQuery(trpc.pet.list.queryOptions(MY_PETS_LIST_INPUT));
   const quotaQuery = useQuery(trpc.pet.quota.queryOptions());
 
   const deletePet = useMutation(

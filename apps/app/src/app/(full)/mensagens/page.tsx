@@ -2,6 +2,7 @@ import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 
 import { MessagesView } from "@animalesko/features/messages-view";
 import { PageHeader } from "@animalesko/features/page-header";
+import { MESSAGES_CONVERSATIONS_INPUT } from "@animalesko/features/query-inputs";
 import { requireSession } from "~/lib/require-session.ts";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 
@@ -13,7 +14,9 @@ export default async function MessagesPage() {
   await requireSession("/mensagens");
 
   const queryClient = getQueryClient();
-  await queryClient.prefetchQuery(trpc.message.conversations.queryOptions({ limit: 30 }));
+  await queryClient.prefetchQuery(
+    trpc.message.conversations.queryOptions(MESSAGES_CONVERSATIONS_INPUT),
+  );
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

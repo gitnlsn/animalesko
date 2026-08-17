@@ -9,6 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { FilterBar } from "./filter-bar.tsx";
 import { ListingSearch } from "./listing-search.tsx";
 import { PetCard } from "./pet-card.tsx";
+import { ADOPTION_PAGE_LIMIT } from "../lib/query-inputs.ts";
 import { useTRPC } from "../trpc.ts";
 
 /**
@@ -27,7 +28,9 @@ export function AdoptionView() {
   const filters = listingSearchParamsSchema.parse(Object.fromEntries(searchParams.entries()));
   const isFiltered = Object.values(filters).some(Boolean);
 
-  const listings = useQuery(trpc.catalog.listings.queryOptions({ ...filters, limit: 50 }));
+  const listings = useQuery(
+    trpc.catalog.listings.queryOptions({ ...filters, limit: ADOPTION_PAGE_LIMIT }),
+  );
 
   return (
     <div className="space-y-4">

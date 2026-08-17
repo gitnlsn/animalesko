@@ -12,6 +12,7 @@
     "./auth": "./src/lib/auth-context.tsx",
     "./use-favorites": "./src/lib/use-favorites.ts",
     "./platform": "./src/lib/platform.ts",
+    "./query-inputs": "./src/lib/query-inputs.ts",
     "./*": "./src/components/*.tsx"
   },
   "scripts": {
