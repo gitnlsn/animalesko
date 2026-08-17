@@ -63,6 +63,13 @@ jobs:
 
       - run: pnpm typecheck
       - run: pnpm lint
+
+      # apps/app and apps/mobile are two hosts over the same screens, and
+      # neither fails to build when the other is missing a page — so route
+      # drift is only ever found by opening the app. This is cheap and catches
+      # it at the pull request.
+      - run: pnpm check:routes
+
       - run: pnpm test
       - run: pnpm test:integration
 
