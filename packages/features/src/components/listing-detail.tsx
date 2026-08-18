@@ -166,21 +166,42 @@ export function ListingDetail({ listing, siblings }: ListingDetailProps) {
           />
 
           {photos.length > 1 ? (
-            <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2">
-              {photos.map((photo, index) => (
-                <button
-                  key={photo}
-                  type="button"
-                  aria-label={`Foto ${index + 1}`}
-                  aria-current={index === photoIndex}
-                  onClick={() => setPhotoIndex(index)}
-                  className={cn(
-                    "size-2 rounded-full transition-colors",
-                    index === photoIndex ? "bg-primary-foreground" : "bg-primary-foreground/40",
-                  )}
-                />
-              ))}
-            </div>
+            <>
+              <button
+                type="button"
+                aria-label="Foto anterior"
+                onClick={() =>
+                  setPhotoIndex((index) => (index - 1 + photos.length) % photos.length)
+                }
+                className="absolute inset-y-0 left-0 z-0 w-1/3"
+              />
+              <button
+                type="button"
+                aria-label="Próxima foto"
+                onClick={() => setPhotoIndex((index) => (index + 1) % photos.length)}
+                className="absolute inset-y-0 right-0 z-0 w-1/3"
+              />
+
+              <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center">
+                {photos.map((photo, index) => (
+                  <button
+                    key={photo}
+                    type="button"
+                    aria-label={`Foto ${index + 1}`}
+                    aria-current={index === photoIndex}
+                    onClick={() => setPhotoIndex(index)}
+                    className="relative flex size-11 items-center justify-center"
+                  >
+                    <span
+                      className={cn(
+                        "size-2 rounded-full transition-colors",
+                        index === photoIndex ? "bg-primary-foreground" : "bg-primary-foreground/40",
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
+            </>
           ) : null}
         </div>
 
