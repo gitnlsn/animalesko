@@ -25,7 +25,7 @@ export function AccordionTrigger({
       <AccordionPrimitive.Trigger
         className={cn(
           "flex flex-1 items-center justify-between gap-2 py-4 text-left text-sm font-medium",
-          "transition-colors hover:text-primary [&[data-state=open]>svg]:rotate-180",
+          "transition-colors hover:text-primary active:text-primary [&[data-state=open]>svg]:rotate-180",
           className,
         )}
         {...props}
