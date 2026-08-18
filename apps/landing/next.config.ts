@@ -50,10 +50,20 @@ const config: NextConfig = {
   trailingSlash: false,
 
   // Every photo is committed under public/, so no remote patterns are needed.
-  // AVIF first: the source images came out of Framer as AVIF already, and the
-  // hero is the LCP element on every device.
+  //
+  // WebP only, deliberately. AVIF was enabled here first and it was a mistake:
+  // the sources are already WebP, so asking the optimiser to re-encode them to
+  // AVIF bought perhaps 20% on a 57 kB hero and cost minutes of latency.
+  // Measured on this machine, same image through `next/image`:
+  //
+  //   WebP,  1080px   266 ms
+  //   AVIF,   828px   still encoding at 150 s, abandoned
+  //
+  // Until the first encode returns, the visitor stares at the blur placeholder,
+  // and on Vercel the optimiser's own timeout turns a slow encode into an image
+  // that never loads at all. Not a trade worth 10 kB.
   images: {
-    formats: ["image/avif", "image/webp"],
+    formats: ["image/webp"],
     // The landing art is fixed; these are the widths the layout actually asks
     // for. A shorter list means fewer variants built and cached.
     deviceSizes: [360, 480, 640, 828, 1080, 1200, 1920],
