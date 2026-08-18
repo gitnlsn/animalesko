@@ -48,3 +48,19 @@
 .leaflet-control-attribution a {
   color: var(--color-primary);
 }
+
+/* Invert OSM tiles in dark mode so the Pet Alert map isn't a bright hole. */
+.dark .leaflet-tile {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.6);
+}
+
+/* Stock Leaflet chrome hardcodes #fff/black and #757575; tokenize it. */
+.leaflet-bar a {
+  background: var(--color-card);
+  color: var(--color-foreground);
+  border-color: var(--color-border);
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--color-muted-foreground);
+}
