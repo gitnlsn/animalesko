@@ -1,7 +1,7 @@
 "use client";
 
 import { formatAgePtBR, formatPrice } from "@animalesko/api/schemas";
-import { Badge, Button, Card, CardContent, cn } from "@animalesko/ui";
+import { Badge, Button, Card, CardContent, ListSkeleton, cn } from "@animalesko/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, Heart, MapPin, Star, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -24,7 +24,7 @@ export function FavoritesList() {
   const offerings = useQuery(trpc.favorite.offerings.queryOptions());
 
   if (listings.isPending || offerings.isPending) {
-    return <p className="text-sm text-muted-foreground">Carregando…</p>;
+    return <ListSkeleton count={3} withMedia />;
   }
 
   const pets = listings.data ?? [];

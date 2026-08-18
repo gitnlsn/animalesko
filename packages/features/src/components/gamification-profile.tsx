@@ -1,7 +1,7 @@
 "use client";
 
 import { POINTS } from "@animalesko/api/schemas";
-import { Badge, Card, Progress, cn } from "@animalesko/ui";
+import { Badge, Card, Progress, StatGridSkeleton, cn } from "@animalesko/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Award, Trophy } from "lucide-react";
 
@@ -24,7 +24,7 @@ export function GamificationProfile() {
   const profile = useQuery(trpc.gamification.profile.queryOptions(GAMIFICATION_PROFILE_INPUT));
 
   if (profile.isPending) {
-    return <Card className="p-4 text-sm text-muted-foreground">Carregando…</Card>;
+    return <StatGridSkeleton count={3} />;
   }
 
   if (!profile.data) return null;

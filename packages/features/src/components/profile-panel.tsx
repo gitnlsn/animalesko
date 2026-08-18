@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  ProfileSkeleton,
   initials,
 } from "@animalesko/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -59,7 +60,7 @@ export function ProfilePanel() {
   const profile = useQuery(trpc.profile.me.queryOptions());
 
   if (profile.isPending) {
-    return <p className="text-sm text-muted-foreground">Carregando…</p>;
+    return <ProfileSkeleton />;
   }
 
   if (!profile.data) return null;
