@@ -72,7 +72,7 @@ export function SiteHeader() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-ink hover:bg-brand-wash block rounded-lg px-3 py-2 text-sm font-medium"
+                    className="text-ink hover:bg-brand-wash block rounded-lg px-3 py-3 text-sm font-medium"
                   >
                     {item.label}
                   </Link>

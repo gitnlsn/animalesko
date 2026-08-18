@@ -1,8 +1,6 @@
-import Image from "next/image";
-import Link from "next/link";
-
 import { Breadcrumbs } from "~/components/breadcrumbs";
 import { JsonLd } from "~/components/json-ld";
+import { ServiceCard } from "~/components/service-card";
 import { Container, CtaLink, Heading, Section } from "~/components/ui";
 import { services } from "~/lib/content";
 import { pageMetadata } from "~/lib/metadata";
@@ -55,27 +53,7 @@ export default function ServicesIndexPage() {
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {services.map((service) => (
               <li key={service.slug}>
-                <article className="group border-line rounded-card flex h-full flex-col overflow-hidden border bg-white transition-shadow hover:shadow-brand-sm">
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <Image
-                      src={service.image}
-                      alt={service.imageAlt}
-                      placeholder="blur"
-                      sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="flex flex-1 flex-col p-6">
-                    <h2 className="text-ink font-display text-xl font-semibold">{service.name}</h2>
-                    <p className="text-ink-soft mt-2 flex-1 leading-relaxed">{service.summary}</p>
-                    <Link
-                      href={`/servicos/${service.slug}`}
-                      className="text-brand hover:text-brand-dark mt-5 inline-flex text-sm font-medium"
-                    >
-                      Ver {service.name.toLowerCase()} →
-                    </Link>
-                  </div>
-                </article>
+                <ServiceCard service={service} headingLevel="h2" cta="Ver" />
               </li>
             ))}
           </ul>

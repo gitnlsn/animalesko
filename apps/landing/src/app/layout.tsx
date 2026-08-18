@@ -107,10 +107,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         */}
         <JsonLd schema={[organizationSchema(), websiteSchema()]} />
 
-        <a
-          href="#conteudo"
-          className="bg-brand sr-only rounded-full px-4 py-2 text-white focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[100] focus:ring-accent"
-        >
+        {/* Styling lives in globals.css — see the note on .skip-link there. */}
+        <a href="#conteudo" className="skip-link">
           Pular para o conteúdo
         </a>
 

@@ -38,12 +38,12 @@ export function SiteFooter() {
             <h2 id="footer-servicos" className="text-ink font-display text-base font-semibold">
               Serviços
             </h2>
-            <ul className="mt-4 flex flex-col gap-2">
+            <ul className="mt-4 flex flex-col gap-0.5">
               {services.map((service) => (
                 <li key={service.slug}>
                   <Link
                     href={`/servicos/${service.slug}`}
-                    className="text-ink-soft hover:text-brand text-sm"
+                    className="text-ink-soft hover:text-brand -mx-2 block rounded-lg px-2 py-2 text-sm"
                   >
                     {service.name}
                   </Link>
@@ -56,29 +56,44 @@ export function SiteFooter() {
             <h2 id="footer-navegacao" className="text-ink font-display text-base font-semibold">
               Navegação
             </h2>
-            <ul className="mt-4 flex flex-col gap-2">
+            <ul className="mt-4 flex flex-col gap-0.5">
               <li>
-                <Link href="/para-tutores" className="text-ink-soft hover:text-brand text-sm">
+                <Link
+                  href="/para-tutores"
+                  className="text-ink-soft hover:text-brand -mx-2 block rounded-lg px-2 py-2 text-sm"
+                >
                   Para tutores
                 </Link>
               </li>
               <li>
-                <Link href="/para-prestadores" className="text-ink-soft hover:text-brand text-sm">
+                <Link
+                  href="/para-prestadores"
+                  className="text-ink-soft hover:text-brand -mx-2 block rounded-lg px-2 py-2 text-sm"
+                >
                   Para prestadores
                 </Link>
               </li>
               <li>
-                <Link href="/ongs" className="text-ink-soft hover:text-brand text-sm">
+                <Link
+                  href="/ongs"
+                  className="text-ink-soft hover:text-brand -mx-2 block rounded-lg px-2 py-2 text-sm"
+                >
                   Para ONGs
                 </Link>
               </li>
               <li>
-                <Link href="/servicos" className="text-ink-soft hover:text-brand text-sm">
+                <Link
+                  href="/servicos"
+                  className="text-ink-soft hover:text-brand -mx-2 block rounded-lg px-2 py-2 text-sm"
+                >
                   Todos os serviços
                 </Link>
               </li>
               <li>
-                <Link href="/privacidade" className="text-ink-soft hover:text-brand text-sm">
+                <Link
+                  href="/privacidade"
+                  className="text-ink-soft hover:text-brand -mx-2 block rounded-lg px-2 py-2 text-sm"
+                >
                   Privacidade e LGPD
                 </Link>
               </li>

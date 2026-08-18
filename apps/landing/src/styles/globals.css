@@ -79,6 +79,39 @@
     border-radius: 4px;
   }
 
+  /*
+   * The skip link.
+   *
+   * Written out rather than composed from `sr-only focus:not-sr-only`: those
+   * two utilities land in the same cascade layer with the same specificity, and
+   * `sr-only`'s `clip-path: inset(50%)` was surviving the focus state — the link
+   * took focus but stayed clipped to 32x16 at -1,-1, which is worse than having
+   * no skip link at all, because a keyboard user tabs into something invisible.
+   *
+   * `transform` keeps the element rendered and focusable at all times; only its
+   * position changes. `position: fixed` keeps it out of the layout while hidden.
+   */
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 100;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.625rem 1.25rem;
+    border-radius: 9999px;
+    background-color: var(--color-brand);
+    color: white;
+    font-weight: 500;
+    transform: translateY(calc(-100% - 1rem));
+    transition: transform 150ms ease-out;
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
