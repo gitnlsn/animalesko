@@ -20,6 +20,7 @@ export * from "./components/scroll-area.tsx";
 export * from "./components/select.tsx";
 export * from "./components/separator.tsx";
 export * from "./components/sheet.tsx";
+export * from "./components/screen-skeletons.tsx";
 export * from "./components/skeleton.tsx";
 export * from "./components/switch.tsx";
 export * from "./components/tabs.tsx";

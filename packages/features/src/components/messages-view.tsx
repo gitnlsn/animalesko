@@ -8,7 +8,9 @@ import {
   Card,
   CardContent,
   Input,
+  ListSkeleton,
   ScrollArea,
+  ThreadSkeleton,
   cn,
   initials,
   toast,
@@ -55,7 +57,7 @@ function ConversationList({ onOpen }: { onOpen: (id: string) => void }) {
   );
 
   if (conversations.isPending) {
-    return <p className="text-sm text-muted-foreground">Carregando…</p>;
+    return <ListSkeleton count={5} withMedia />;
   }
 
   const items = conversations.data ?? [];
@@ -163,7 +165,7 @@ function Thread({ conversationId, onBack }: { conversationId: string; onBack: ()
 
       <ScrollArea className="flex-1 rounded-xl border bg-card p-3">
         {thread.isPending ? (
-          <p className="p-4 text-center text-sm text-muted-foreground">Carregando…</p>
+          <ThreadSkeleton />
         ) : messages.length === 0 ? (
           <p className="p-8 text-center text-sm text-muted-foreground">
             Nenhuma mensagem ainda. Diga olá 👋

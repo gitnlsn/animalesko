@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Tabs, TabsContent, TabsList, TabsTrigger } from "@animalesko/ui";
+import { Card, ListSkeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "@animalesko/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar } from "lucide-react";
 import { useState } from "react";
@@ -67,7 +67,7 @@ function ServiceList({
   );
 
   if (offerings.isPending) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Carregando…</p>;
+    return <ListSkeleton count={3} />;
   }
 
   if (!offerings.data?.length) {

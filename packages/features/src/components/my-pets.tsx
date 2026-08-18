@@ -16,6 +16,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  ListSkeleton,
   toast,
 } from "@animalesko/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -101,7 +102,7 @@ export function MyPets() {
       ) : null}
 
       {petsQuery.isPending ? (
-        <p className="text-sm text-muted-foreground">Carregando…</p>
+        <ListSkeleton count={3} withMedia />
       ) : pets.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-12 text-center">

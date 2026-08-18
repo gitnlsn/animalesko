@@ -20,6 +20,7 @@ import {
   Button,
   Card,
   CardContent,
+  ListSkeleton,
   Tabs,
   TabsContent,
   TabsList,
@@ -96,7 +97,7 @@ function BookingList({
   );
 
   if (bookings.isPending) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Carregando…</p>;
+    return <ListSkeleton count={4} />;
   }
 
   const items = bookings.data ?? [];
