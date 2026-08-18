@@ -53,3 +53,13 @@ apps/mobile/android/keystore.properties
 
 CLAUDE.md
 .rtk
+
+# Personal Claude Code state. Deliberately not shared: settings.json arms hooks
+# for everyone who clones, and the auto-merge Stop hook pushes and merges pull
+# requests — that has to be each developer's own opt-in. .claude/launch.json is
+# the exception and stays tracked, so this lists the personal paths rather than
+# ignoring .claude wholesale.
+.claude/settings.json
+.claude/settings.local.json
+.claude/hooks/
+.claude/worktrees/
