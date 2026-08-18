@@ -62,13 +62,19 @@ const FAQ = [
  * — no request leaves the browser. Kept because it genuinely helps someone who
  * would rather type than scan a list, and labelled honestly in the UI so nobody
  * mistakes it for a person or a model.
+ *
+ * Acceptance criterion: every question string in FAQ must match its own entry's
+ * KEYWORDS regex here (verified character-by-character), so tapping a suggested
+ * question — or typing it back — never falls through to the fallback message.
+ * The regexes also cover the app's own brand terms ("Pet Alert", "Aumigos") so
+ * users typing those words land on the right answer too.
  */
 const KEYWORDS: { match: RegExp; answer: string }[] = [
   { match: /ado[çc]|adotar/i, answer: FAQ[0]!.answer },
-  { match: /pre[çc]o|custo|caro|gr[aá]tis|pagar|pagamento/i, answer: FAQ[1]!.answer },
+  { match: /pre[çc]o|cust[ao]|caro|gr[aá]tis|pagar|pagamento/i, answer: FAQ[1]!.answer },
   { match: /cancel/i, answer: FAQ[2]!.answer },
-  { match: /perdid|alerta|sumiu|achei|encontr/i, answer: FAQ[3]!.answer },
-  { match: /ponto|n[ií]vel|badge/i, answer: FAQ[4]!.answer },
+  { match: /perdid|alerta|sumiu|achei|encontr|pet ?alert/i, answer: FAQ[3]!.answer },
+  { match: /ponto|n[ií]vel|badge|aumigo/i, answer: FAQ[4]!.answer },
   { match: /prestador|n[ãa]o apareceu|atras/i, answer: FAQ[5]!.answer },
 ];
 
