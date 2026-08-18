@@ -15,7 +15,12 @@
         <domain includeSubdomains="false">10.0.2.2</domain>
         <!-- Genymotion's equivalent. -->
         <domain includeSubdomains="false">10.0.3.2</domain>
-        <!-- The Capacitor bundle's own origin. -->
+        <!-- The Capacitor bundle's own origin, and the far end of an
+             `adb reverse` tunnel on a USB device. Both spellings are listed:
+             a config matches on the literal host, so a build that reached the
+             tunnel as 127.0.0.1 was refused with ERR_CLEARTEXT_NOT_PERMITTED
+             while the identical request to `localhost` went through. -->
         <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
     </domain-config>
 </network-security-config>

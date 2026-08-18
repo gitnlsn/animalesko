@@ -52,13 +52,27 @@ running: `pnpm db:up && pnpm dev`.
 pnpm --filter @animalesko/mobile dev:android
 ```
 
-That sets up `adb reverse tcp:3000 tcp:3000` for you. It is the reliable way to
-reach a dev server: inside the emulator `localhost` is the emulator, and
-`10.0.2.2` (the documented host alias) is one more thing to get wrong. The
-tunnel also works over USB on a real device.
+On an **emulator** that builds against `http://10.0.2.2:3000` — the alias every
+Android emulator maps to the host's loopback. Inside the emulator `localhost` is
+the emulator itself, so it cannot be used directly.
 
-Two Android-only traps, both already handled, both worth knowing because the
+On a **USB device** there is no such alias, so the command sets up
+`adb reverse tcp:3000 tcp:3000` and builds against `http://localhost:3000`
+instead. Know that this tunnel is not durable: it dies with the adb server and
+does not always survive a force-stop of the app, and **`adb reverse --list` goes
+on reporting a mapping that is already refusing connections** — so it is not a
+check. Re-run `dev:android` when the app stops reaching the API.
+
+With more than one device attached, set `ANDROID_SERIAL`; the command refuses to
+guess and tells you the serials it found.
+
+Three Android-only traps, all already handled, all worth knowing because the
 symptom is an app that renders empty states while the server log looks healthy:
+
+- **The app cannot reach the API and nothing says so.** `output: "export"` bakes
+  the home screen's numbers in at build time, so it still renders; only the
+  calls that need the server fail. Sign-in is usually the first one noticed.
+  `adb -s <serial> logcat -s Capacitor/Console` shows the `Failed to fetch`.
 
 - **The bundle is served from `https://localhost`, not `http://`.** Capacitor's
   `androidScheme` defaults to https. That exact origin has to be trusted by the
