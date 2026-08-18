@@ -137,7 +137,7 @@ ${BOLD}Animalesko mobile${OFF}
     ANDROID_SERIAL     Which attached device to use; required if several are
     PROD_API_URL       Release default (https://app.animalesko.org)
     PROD_WEB_URL       Origin for share/deep links (defaults to PROD_API_URL)
-    PROD_PLUS_URL      Provider app (https://plus.animalesko.org)
+    PROD_PLUS_URL      Provider app (https://backoffice.animalesko.org)
     PUSH_ENABLED       true once Firebase/APNs credentials are in place (default false)
 EOF
 }
@@ -291,7 +291,7 @@ cmd_release_android() {
   local url web plus
   url="${API_URL:-${PROD_API_URL:-https://app.animalesko.org}}"
   web="${PROD_WEB_URL:-$url}"
-  plus="${PROD_PLUS_URL:-https://plus.animalesko.org}"
+  plus="${PROD_PLUS_URL:-https://backoffice.animalesko.org}"
   assert_release_api_url "$url"
   assert_release_api_url "$web"
   assert_release_api_url "$plus"
@@ -328,7 +328,7 @@ cmd_release_ios() {
   local url web plus
   url="${API_URL:-${PROD_API_URL:-https://app.animalesko.org}}"
   web="${PROD_WEB_URL:-$url}"
-  plus="${PROD_PLUS_URL:-https://plus.animalesko.org}"
+  plus="${PROD_PLUS_URL:-https://backoffice.animalesko.org}"
   assert_release_api_url "$url"
   assert_release_api_url "$web"
   assert_release_api_url "$plus"

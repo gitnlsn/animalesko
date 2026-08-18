@@ -92,7 +92,7 @@ const baseUrl =
  * One Better Auth instance, mounted by both apps.
  *
  * Sessions are deliberately shared: a provider who is also a tutor signs in
- * once and moves between app.animalesko.org and plus.animalesko.org without
+ * once and moves between app.animalesko.org and backoffice.animalesko.org without
  * re-authenticating. In production that requires AUTH_COOKIE_DOMAIN to be set
  * to the registrable parent domain (".animalesko.org").
  */
