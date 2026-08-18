@@ -17,6 +17,14 @@
     "NEXT_PUBLIC_APP_URL",
     "NEXT_PUBLIC_PLUS_URL",
     "NEXT_PUBLIC_API_URL",
+    // apps/landing. NEXT_PUBLIC_SITE_URL drives every canonical URL and the
+    // sitemap; NEXT_PUBLIC_BACKOFFICE_URL is empty until DNS points
+    // backoffice.animalesko.org at the apps/plus deployment.
+    "NEXT_PUBLIC_SITE_URL",
+    "NEXT_PUBLIC_BACKOFFICE_URL",
+    "NEXT_PUBLIC_FORCE_INDEXABLE",
+    "GOOGLE_SITE_VERIFICATION",
+    "LANDING_LEADS_WEBHOOK_URL",
     "BLOB_READ_WRITE_TOKEN",
     // Firebase service-account JSON for push delivery. Absent on a fresh clone
     // and in CI, where sendPush is a deliberate no-op.
@@ -63,7 +71,16 @@
         // Baked into the native bundle at build time: it is the absolute URL of
         // the apps/app deployment, and a cached build from a different value
         // would ship an app pointing at the wrong API.
-        "NEXT_PUBLIC_API_URL"
+        "NEXT_PUBLIC_API_URL",
+        // Baked into apps/landing's HTML: canonical tags, sitemap entries and
+        // the visible back-office CTA. A cached build from a different value
+        // would publish canonicals pointing at the wrong host.
+        "NEXT_PUBLIC_SITE_URL",
+        "NEXT_PUBLIC_BACKOFFICE_URL",
+        "NEXT_PUBLIC_FORCE_INDEXABLE",
+        "GOOGLE_SITE_VERIFICATION",
+        "VERCEL_ENV",
+        "VERCEL_PROJECT_PRODUCTION_URL"
       ],
       "outputs": [".next/**", "!.next/cache/**", "dist/**", "out/**"]
     },
