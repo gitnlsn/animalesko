@@ -32,6 +32,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { formatDateTimePtBR, formatMonthPtBR } from "../lib/display.ts";
+import { HISTORY_BOOKINGS_LIMIT } from "../lib/query-inputs.ts";
 import { useTRPC } from "../trpc.ts";
 
 import type { BookingDTO } from "@animalesko/api";
@@ -90,7 +91,9 @@ function BookingList({
   onCancel: (booking: BookingDTO) => void;
 }) {
   const trpc = useTRPC();
-  const bookings = useQuery(trpc.booking.list.queryOptions({ status, limit: 100 }));
+  const bookings = useQuery(
+    trpc.booking.list.queryOptions({ status, limit: HISTORY_BOOKINGS_LIMIT }),
+  );
 
   if (bookings.isPending) {
     return <p className="py-8 text-center text-sm text-muted-foreground">Carregando…</p>;

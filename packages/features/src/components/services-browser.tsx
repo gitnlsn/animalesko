@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { BookingDialog } from "./booking-dialog.tsx";
 import { ServiceCard } from "./service-card.tsx";
+import { SERVICES_DEFAULT_TYPE, SERVICES_PAGE_LIMIT } from "../lib/query-inputs.ts";
 import { useTRPC } from "../trpc.ts";
 
 import type { PublicOfferingDTO } from "@animalesko/api";
@@ -30,7 +31,7 @@ export function ServicesBrowser() {
 
   return (
     <>
-      <Tabs defaultValue="PET_SITTER" className="w-full">
+      <Tabs defaultValue={SERVICES_DEFAULT_TYPE} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           {TABS.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
@@ -61,7 +62,9 @@ function ServiceList({
   onBook: (offering: PublicOfferingDTO) => void;
 }) {
   const trpc = useTRPC();
-  const offerings = useQuery(trpc.catalog.offerings.queryOptions({ type, limit: 50 }));
+  const offerings = useQuery(
+    trpc.catalog.offerings.queryOptions({ type, limit: SERVICES_PAGE_LIMIT }),
+  );
 
   if (offerings.isPending) {
     return <p className="py-8 text-center text-sm text-muted-foreground">Carregando…</p>;

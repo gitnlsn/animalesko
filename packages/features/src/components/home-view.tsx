@@ -8,6 +8,7 @@ import Link from "next/link";
 import { PetCard } from "./pet-card.tsx";
 import { PetOfTheDay } from "./pet-of-the-day.tsx";
 import { StatsCard } from "./stats-card.tsx";
+import { HOME_RECENT_LISTINGS_INPUT } from "../lib/query-inputs.ts";
 import { useTRPC } from "../trpc.ts";
 
 /**
@@ -24,7 +25,7 @@ export function HomeView() {
 
   const petOfTheDay = useQuery(trpc.catalog.petOfTheDay.queryOptions());
   const stats = useQuery(trpc.catalog.stats.queryOptions());
-  const recent = useQuery(trpc.catalog.listings.queryOptions({ limit: 2 }));
+  const recent = useQuery(trpc.catalog.listings.queryOptions(HOME_RECENT_LISTINGS_INPUT));
 
   return (
     <div className="space-y-6">

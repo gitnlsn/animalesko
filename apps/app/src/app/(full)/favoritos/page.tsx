@@ -1,7 +1,6 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 
-import { FavoritesList } from "@animalesko/features/favorites-list";
-import { PageHeader } from "@animalesko/features/page-header";
+import { FavoritesScreen } from "@animalesko/features/favorites-screen";
 import { requireSession } from "~/lib/require-session.ts";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 
@@ -22,14 +21,7 @@ export default async function FavoritesPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <PageHeader
-        title="Meus favoritos"
-        subtitle="Pets e serviços que você guardou"
-        backTo="/perfil"
-      />
-      <main className="mx-auto max-w-md p-4">
-        <FavoritesList />
-      </main>
+      <FavoritesScreen />
     </HydrationBoundary>
   );
 }

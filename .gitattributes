@@ -1,0 +1,37 @@
+# Line endings are the repository's decision, not each machine's.
+#
+# Without this, Git honours core.autocrlf, which is `true` by default on
+# Windows: files are checked out CRLF while Prettier is configured for LF. The
+# result is that `pnpm format:check` fails on every file in the repo on Windows
+# but passes in CI, and `pnpm format` rewrites all ~400 of them — which buries a
+# real change in noise and turns a one-line edit into a 400-file diff.
+#
+# `text=auto eol=lf` normalises to LF in the index and checks out LF on every
+# platform, so both see what Prettier expects.
+* text=auto eol=lf
+
+# Binary: never normalised, never diffed as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.keystore binary
+*.jks binary
+
+# Generated and vendored: excluded from diffs and from language statistics, so
+# a lockfile bump does not read as twenty thousand lines to review.
+pnpm-lock.yaml linguist-generated=true -diff
+packages/db/src/generated/** linguist-generated=true -diff
+
+# cmd.exe needs CRLF to parse a batch file reliably, and these are already
+# stored that way. `-text` leaves them byte-identical everywhere rather than
+# round-tripping them through LF on every checkout.
+*.bat -text
+*.cmd -text

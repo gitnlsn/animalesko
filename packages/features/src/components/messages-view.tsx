@@ -18,6 +18,7 @@ import { ArrowLeft, MapPin, MessageCircle, Send } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { MESSAGES_CONVERSATIONS_INPUT } from "../lib/query-inputs.ts";
 import { useSession } from "../lib/session-context.tsx";
 import { useTRPC } from "../trpc.ts";
 
@@ -49,7 +50,9 @@ export function MessagesView() {
 
 function ConversationList({ onOpen }: { onOpen: (id: string) => void }) {
   const trpc = useTRPC();
-  const conversations = useQuery(trpc.message.conversations.queryOptions({ limit: 30 }));
+  const conversations = useQuery(
+    trpc.message.conversations.queryOptions(MESSAGES_CONVERSATIONS_INPUT),
+  );
 
   if (conversations.isPending) {
     return <p className="text-sm text-muted-foreground">Carregando…</p>;
