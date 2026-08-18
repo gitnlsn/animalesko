@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 
 import { NotificationDropdown } from "./notification-dropdown.tsx";
-import { TABS } from "./bottom-nav.tsx";
+import { TABS, isActiveTab } from "./bottom-nav.tsx";
 
 /**
  * The gradient bar at the top of every tab.
@@ -14,7 +14,7 @@ import { TABS } from "./bottom-nav.tsx";
  */
 export function AppHeader({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname();
-  const title = TABS.find((tab) => tab.href === pathname)?.label ?? "Animalesko";
+  const title = TABS.find((tab) => isActiveTab(pathname, tab.href))?.label ?? "Animalesko";
 
   return (
     <header className="sticky top-0 z-40 bg-gradient-primary shadow-brand-md">
