@@ -39,13 +39,18 @@ export function BottomNav() {
               href={tab.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center justify-center rounded-lg px-3 py-2 transition-smooth",
-                isActive
-                  ? "bg-primary-light text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-primary",
+                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 py-2 transition-smooth active:opacity-80",
+                isActive ? "text-primary" : "text-muted-foreground hover:text-primary",
               )}
             >
-              <Icon size={20} className={cn("mb-1 transition-smooth", isActive && "scale-110")} />
+              <span
+                className={cn(
+                  "flex h-7 w-14 items-center justify-center rounded-full transition-smooth",
+                  isActive ? "bg-primary-light" : "active:bg-muted",
+                )}
+              >
+                <Icon size={20} className="transition-smooth" />
+              </span>
               <span className="truncate text-xs font-medium">{tab.label}</span>
             </Link>
           );
