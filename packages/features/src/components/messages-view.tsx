@@ -89,7 +89,7 @@ function ConversationList({ onOpen }: { onOpen: (id: string) => void }) {
               className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:bg-muted/50"
             >
               <Avatar className="size-12 shrink-0">
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                <AvatarFallback className="bg-gradient-primary text-gradient-foreground">
                   {initials(name)}
                 </AvatarFallback>
               </Avatar>

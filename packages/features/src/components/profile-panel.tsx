@@ -72,7 +72,7 @@ export function ProfilePanel() {
       <div className="border-b border-border pb-6 text-center">
         <Avatar className="mx-auto mb-3 size-20">
           <AvatarImage src={me.image ?? undefined} alt="" />
-          <AvatarFallback className="bg-gradient-primary text-2xl font-bold text-primary-foreground">
+          <AvatarFallback className="bg-gradient-primary text-2xl font-bold text-gradient-foreground">
             {initials(me.name)}
           </AvatarFallback>
         </Avatar>

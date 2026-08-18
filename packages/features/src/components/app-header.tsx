@@ -25,8 +25,8 @@ export function AppHeader({ signedIn }: { signedIn: boolean }) {
           the bottom nav already takes for the home indicator. */}
       <div className="mx-auto flex max-w-md items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
         <div>
-          <h1 className="text-lg font-bold text-primary-foreground">{title}</h1>
-          <p className="text-xs text-primary-foreground/80">Animalesko</p>
+          <h1 className="text-lg font-bold text-gradient-foreground">{title}</h1>
+          <p className="text-xs text-gradient-foreground/80">Animalesko</p>
         </div>
 
         <NotificationDropdown signedIn={signedIn} />
