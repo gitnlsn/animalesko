@@ -23,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
   Input,
+  ListSkeleton,
   Textarea,
   toast,
 } from "@animalesko/ui";
@@ -91,7 +92,7 @@ export function ClientsPanel() {
       </div>
 
       {clients.isPending ? (
-        <p className="text-sm text-muted-foreground">Carregando…</p>
+        <ListSkeleton count={4} />
       ) : items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-12 text-center">

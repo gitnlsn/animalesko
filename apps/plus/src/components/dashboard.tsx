@@ -5,7 +5,16 @@ import {
   formatVaccinationStatus,
   vaccinationStatus,
 } from "@animalesko/api/schemas";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, cn } from "@animalesko/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  ListSkeleton,
+  cn,
+} from "@animalesko/ui";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -95,7 +104,7 @@ export function Dashboard() {
 
           <CardContent className="space-y-3">
             {today.isPending ? (
-              <p className="text-sm text-muted-foreground">Carregando…</p>
+              <ListSkeleton count={3} />
             ) : today.data?.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 Nenhum atendimento hoje. Bom dia para colocar a papelada em dia 🐾
@@ -142,7 +151,7 @@ export function Dashboard() {
 
           <CardContent className="space-y-3">
             {dueVaccines.isPending ? (
-              <p className="text-sm text-muted-foreground">Carregando…</p>
+              <ListSkeleton count={3} />
             ) : dueVaccines.data?.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 Nenhum reforço nos próximos 30 dias.

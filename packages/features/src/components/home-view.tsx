@@ -38,13 +38,15 @@ export function HomeView() {
       <section className="relative overflow-hidden rounded-2xl bg-gradient-hero p-6 text-gradient-foreground shadow-brand-lg">
         <h2 className="mb-2 text-2xl font-bold">Encontre seu novo melhor amigo</h2>
         <p className="mb-4 text-gradient-foreground/90">
-          {stats.isPending
-            ? "Carregando…"
-            : stats.data?.availableListings === 0
-              ? "Nenhum pet aguardando no momento."
-              : stats.data?.availableListings === 1
-                ? "1 pet esperando por uma família"
-                : `${stats.data?.availableListings ?? 0} pets esperando por uma família`}
+          {stats.isPending ? (
+            <Skeleton className="inline-block h-5 w-56 bg-gradient-foreground/25 align-middle" />
+          ) : stats.data?.availableListings === 0 ? (
+            "Nenhum pet aguardando no momento."
+          ) : stats.data?.availableListings === 1 ? (
+            "1 pet esperando por uma família"
+          ) : (
+            `${stats.data?.availableListings ?? 0} pets esperando por uma família`
+          )}
         </p>
         <Button asChild variant="secondary" className="font-medium">
           <Link href="/adocao">Ver pets disponíveis</Link>

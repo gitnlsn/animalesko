@@ -32,6 +32,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Skeleton,
   Textarea,
   toast,
 } from "@animalesko/ui";
@@ -56,11 +57,7 @@ import type { AlertDTO } from "@animalesko/api";
  */
 const AlertMap = dynamic(() => import("./alert-map.tsx").then((mod) => mod.AlertMap), {
   ssr: false,
-  loading: () => (
-    <div className="flex size-full items-center justify-center bg-muted text-sm text-muted-foreground">
-      Carregando mapa…
-    </div>
-  ),
+  loading: () => <Skeleton className="size-full rounded-none" />,
 });
 
 /** Central São Paulo, used until (or unless) geolocation resolves. */

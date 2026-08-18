@@ -21,6 +21,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  DetailSkeleton,
   Form,
   FormControl,
   FormDescription,
@@ -71,7 +72,7 @@ export function OrganizationPanel() {
   const organization = useQuery(trpc.organization.current.queryOptions());
 
   if (organization.isPending) {
-    return <p className="text-sm text-muted-foreground">Carregando…</p>;
+    return <DetailSkeleton />;
   }
 
   if (!organization.data) return null;
