@@ -1,3 +1,5 @@
+import { BRAZIL_TIME_ZONE } from "@animalesko/api/schemas";
+
 import type { PetSize, Sex, Species } from "@animalesko/api/schemas";
 
 /**
@@ -58,14 +60,13 @@ export function petImage(listing: {
  * 09:00 in São Paulo silently reads as some other hour on a device set to
  * a different timezone (e.g. a browser in GMT).
  */
-const SAO_PAULO_TIME_ZONE = "America/Sao_Paulo";
 
 /** "12 de março", "12 de março às 14:00" — pt-BR, one formatter per shape. */
 export function formatDatePtBR(date: Date): string {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "long",
-    timeZone: SAO_PAULO_TIME_ZONE,
+    timeZone: BRAZIL_TIME_ZONE,
   }).format(date);
 }
 
@@ -75,7 +76,7 @@ export function formatDateTimePtBR(date: Date): string {
     month: "long",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: SAO_PAULO_TIME_ZONE,
+    timeZone: BRAZIL_TIME_ZONE,
   }).format(date);
 }
 
@@ -83,7 +84,7 @@ export function formatShortDatePtBR(date: Date): string {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
-    timeZone: SAO_PAULO_TIME_ZONE,
+    timeZone: BRAZIL_TIME_ZONE,
   }).format(date);
 }
 
@@ -92,6 +93,6 @@ export function formatMonthPtBR(date: Date): string {
   return new Intl.DateTimeFormat("pt-BR", {
     month: "long",
     year: "numeric",
-    timeZone: SAO_PAULO_TIME_ZONE,
+    timeZone: BRAZIL_TIME_ZONE,
   }).format(date);
 }
