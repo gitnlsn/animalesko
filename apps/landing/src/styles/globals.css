@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+/*
+ * Landing design tokens.
+ *
+ * The brand values are the same ones packages/ui exposes to apps/app and
+ * apps/plus (blue 213 64% 41%, orange 14 84% 55%) so the three properties read
+ * as one product. What is local to this file are the marketing surfaces — the
+ * cream and pale-blue section backgrounds the Framer page used to separate its
+ * bands, which the product UI has no use for.
+ *
+ * The landing deliberately does NOT depend on @animalesko/ui: that package
+ * pulls in Radix, next-themes and sonner, all of which ship client JavaScript.
+ * A marketing page that renders as static HTML ranks and loads better, so the
+ * handful of elements it needs are written here instead.
+ */
+
+@source "../**/*.{ts,tsx}";
+
+@theme {
+  --color-brand: hsl(213 64% 41%);
+  --color-brand-dark: hsl(213 64% 31%);
+  --color-brand-mid: hsl(213 64% 51%);
+  --color-brand-soft: hsl(213 64% 85%);
+  --color-brand-wash: hsl(210 100% 98%);
+
+  --color-accent: hsl(14 84% 55%);
+  --color-accent-dark: hsl(14 84% 45%);
+  --color-accent-soft: hsl(14 84% 92%);
+
+  --color-cream: #fff0de;
+  --color-sky-band: #dfe9f3;
+
+  --color-ink: hsl(213 20% 20%);
+  --color-ink-soft: hsl(213 10% 40%);
+  --color-line: hsl(213 25% 90%);
+
+  /* next/font injects these; the fallbacks keep the metric close while the
+     font file is still loading, which is what keeps CLS at zero. */
+  --font-display: var(--font-fredoka), "Trebuchet MS", ui-rounded, system-ui, sans-serif;
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.5rem;
+
+  --shadow-brand: 0 8px 25px -5px hsl(213 64% 41% / 0.2);
+  --shadow-brand-sm: 0 4px 12px -2px hsl(213 64% 41% / 0.15);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Anchored sections must clear the sticky header. */
+    scroll-padding-top: 5.5rem;
+  }
+
+  body {
+    background-color: white;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* One visible focus treatment for every interactive element, including the
+     skip link — the landing is keyboard-navigable end to end. */
+  :focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /*
+   * The skip link.
+   *
+   * Written out rather than composed from `sr-only focus:not-sr-only`: those
+   * two utilities land in the same cascade layer with the same specificity, and
+   * `sr-only`'s `clip-path: inset(50%)` was surviving the focus state — the link
+   * took focus but stayed clipped to 32x16 at -1,-1, which is worse than having
+   * no skip link at all, because a keyboard user tabs into something invisible.
+   *
+   * `transform` keeps the element rendered and focusable at all times; only its
+   * position changes. `position: fixed` keeps it out of the layout while hidden.
+   */
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 100;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.625rem 1.25rem;
+    border-radius: 9999px;
+    background-color: var(--color-brand);
+    color: white;
+    font-weight: 500;
+    transform: translateY(calc(-100% - 1rem));
+    transition: transform 150ms ease-out;
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

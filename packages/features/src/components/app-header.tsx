@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 
 import { NotificationDropdown } from "./notification-dropdown.tsx";
-import { TABS } from "./bottom-nav.tsx";
+import { TABS, isActiveTab } from "./bottom-nav.tsx";
 
 /**
  * The gradient bar at the top of every tab.
@@ -14,7 +14,7 @@ import { TABS } from "./bottom-nav.tsx";
  */
 export function AppHeader({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname();
-  const title = TABS.find((tab) => tab.href === pathname)?.label ?? "Animalesko";
+  const title = TABS.find((tab) => isActiveTab(pathname, tab.href))?.label ?? "Animalesko";
 
   return (
     <header className="sticky top-0 z-40 bg-gradient-primary shadow-brand-md">
@@ -25,8 +25,8 @@ export function AppHeader({ signedIn }: { signedIn: boolean }) {
           the bottom nav already takes for the home indicator. */}
       <div className="mx-auto flex max-w-md items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
         <div>
-          <h1 className="text-lg font-bold text-primary-foreground">{title}</h1>
-          <p className="text-xs text-primary-foreground/80">Animalesko</p>
+          <h1 className="text-lg font-bold text-gradient-foreground">{title}</h1>
+          <p className="text-xs text-gradient-foreground/80">Animalesko</p>
         </div>
 
         <NotificationDropdown signedIn={signedIn} />

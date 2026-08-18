@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
+  ListSkeleton,
   Select,
   SelectContent,
   SelectItem,
@@ -171,7 +172,7 @@ export function Agenda({ status, period, q }: AgendaProps) {
       </Card>
 
       {appointments.isPending ? (
-        <p className="text-sm text-muted-foreground">Carregando…</p>
+        <ListSkeleton count={4} />
       ) : items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-12 text-center">

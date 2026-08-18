@@ -8,6 +8,7 @@ API layer and one design system.
 | `apps/app`          | **Consumer.** Tutors adopt pets, book services, report lost pets, chat, review.   | `3000` |
 | `apps/plus`         | **Provider.** Shelters, clinics, petshops and autonomous providers manage supply. | `3001` |
 | `apps/mobile`       | **Consumer, native.** `apps/app` as iOS/Android binaries — see its README.        | `3002` |
+| `apps/landing`      | **Public.** The marketing site at `animalesko.org` — static, SEO-first.           | `3003` |
 | `packages/db`       | Prisma schema, migrations, seed, client singleton, test helpers.                  | —      |
 | `packages/api`      | tRPC routers, Zod contracts, authorisation.                                       | —      |
 | `packages/auth`     | Better Auth instance shared by both apps.                                         | —      |
@@ -15,9 +16,17 @@ API layer and one design system.
 | `packages/ui`       | Design tokens and shared components.                                              | —      |
 | `packages/config`   | tsconfig / ESLint presets.                                                        | —      |
 
-The two apps are **two Vercel projects from one repo**. They are separate
+`app` and `plus` are **two Vercel projects from one repo**. They are separate
 deployments that read and write the same Postgres: what a provider publishes in
-`plus` is what a tutor consumes in `app`.
+`plus` is what a tutor consumes in `app`. `landing` is a third project and
+touches neither — it is a static marketing site whose job is to send each
+visitor to the right one of the other two.
+
+| Public host                 | Serves         |
+| --------------------------- | -------------- |
+| `animalesko.org`            | `apps/landing` |
+| `app.animalesko.org`        | `apps/app`     |
+| `backoffice.animalesko.org` | `apps/plus`    |
 
 ## Getting started
 
@@ -177,6 +186,42 @@ is linkable and server-rendered.
 The four tabs share `app/(shell)/layout.tsx` (gradient header + bottom nav);
 everything else uses `app/(full)/layout.tsx` and brings its own `PageHeader`.
 
+## `apps/landing` routes
+
+The public site, ported from the Framer page that used to live at
+`animalesko.framer.website`. Every route is prerendered as static HTML; the only
+client component on the whole site is the lead form.
+
+| Route               | What it is                                                        |
+| ------------------- | ----------------------------------------------------------------- |
+| `/`                 | Hero, the tutor/provider split, services, how it works, FAQ, form |
+| `/servicos`         | Index of the six services                                         |
+| `/servicos/[slug]`  | One page per service — copy, what's included, its own FAQ         |
+| `/para-tutores`     | What the app does, and where it lives                             |
+| `/para-prestadores` | What the back office does, and where it lives                     |
+| `/ongs`             | For shelters and independent rescuers                             |
+| `/privacidade`      | LGPD notice for the data this site collects                       |
+
+The Framer page pointed all six "Saiba mais" buttons at one "página em
+construção", so six separate search intents had nothing to rank. Splitting them
+into real pages, each with its own title, description, copy and FAQ, is the
+largest single SEO change in the port.
+
+What the app emits for search engines:
+
+- **Metadata** — `metadataBase` plus a self-referencing `<link rel="canonical">`
+  on every route, OpenGraph and Twitter cards, `pt-BR` locale.
+- **Share images** — generated with `ImageResponse` at 1200×630: one for the
+  site, one per service.
+- **Structured data** — a connected graph: `Organization` and `WebSite` in the
+  root layout, then `Service`, `FAQPage`, `BreadcrumbList`, `ItemList` and
+  `WebApplication` per route, all referring back to the organisation by `@id`.
+- **`sitemap.xml` / `robots.txt`** — generated from the same content module the
+  pages render from, so they cannot drift.
+- **Performance** — fonts self-hosted through `next/font`, images served as
+  AVIF/WebP through `next/image` with blur placeholders and explicit dimensions
+  (no layout shift), the hero preloaded as the LCP element.
+
 ## Architecture notes
 
 **One schema, two apps.** `packages/db` holds a single Prisma schema split by
@@ -203,9 +248,10 @@ the server will reject.
 
 ## Deployment
 
-Two Vercel projects, both with **Root Directory** set to the corresponding app
-(`apps/app` / `apps/plus`). Each app's `vercel.json` already sets the install and
-build commands to run from the workspace root through Turborepo.
+Three Vercel projects, each with **Root Directory** set to the corresponding app
+(`apps/app` / `apps/plus` / `apps/landing`). Each app's `vercel.json` already
+sets the install and build commands to run from the workspace root through
+Turborepo.
 
 Required environment variables per project:
 
@@ -225,6 +271,29 @@ an image URL instead of a file, which is also how the workspace runs locally.
 
 `BETTER_AUTH_SECRET` **must match** across both projects, or sessions minted by
 one will not verify on the other.
+
+`apps/landing` needs none of the above — it has no database, no auth and no
+tRPC. Its variables are:
+
+```
+NEXT_PUBLIC_SITE_URL        # canonical origin, e.g. https://animalesko.org
+NEXT_PUBLIC_APP_URL         # https://app.animalesko.org
+NEXT_PUBLIC_BACKOFFICE_URL  # https://backoffice.animalesko.org — see below
+LANDING_LEADS_WEBHOOK_URL   # where the "faça parte" form posts a lead
+GOOGLE_SITE_VERIFICATION    # only if verifying Search Console by meta tag
+```
+
+`NEXT_PUBLIC_BACKOFFICE_URL` is the switch for the provider entry points. While
+it is **empty**, the landing prints `backoffice.animalesko.org` as plain text
+with an "em breve" badge and routes providers to the contact form instead of to
+a link that would not resolve. Set it once the subdomain points at the
+`apps/plus` deployment and every one of those buttons becomes a real link —
+redeploy is all that is needed, there is no code change.
+
+Only the production deployment is indexable: `robots.ts` and the metadata both
+read `VERCEL_ENV`, so preview builds serve `Disallow: /` and `noindex`. Set
+`NEXT_PUBLIC_FORCE_INDEXABLE=true` if you ever need a non-production deployment
+to be crawlable.
 
 Run `pnpm db:deploy` against production as a release step; Vercel builds do not
 migrate on their own. `SEED_CONFIRM`, `SEED_RANDOM_SEED` and `ADMIN_*` are read

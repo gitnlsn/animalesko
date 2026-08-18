@@ -47,6 +47,41 @@ android_sdk() {
 
 adb_bin() { echo "$(android_sdk)/platform-tools/adb"; }
 
+# The one device every later adb call is pinned to with `-s`.
+#
+# Bare `adb` with two emulators attached answers "more than one
+# device/emulator" and exits 1, which under `set -e` kills the script at
+# whichever step happens to touch adb first. Resolving the serial once, and
+# saying which serials exist when it is ambiguous, turns that into a sentence
+# the reader can act on.
+android_device() {
+  local adb="$1" serials count
+
+  serials=$("$adb" devices | tail -n +2 | awk '$2 == "device" { print $1 }')
+  count=$(printf '%s' "$serials" | grep -c . || true)
+
+  if [ -n "${ANDROID_SERIAL:-}" ]; then
+    printf '%s\n' "$serials" | grep -qx "$ANDROID_SERIAL" ||
+      die "ANDROID_SERIAL=$ANDROID_SERIAL is not attached. Attached: $(echo $serials)"
+    echo "$ANDROID_SERIAL"
+    return
+  fi
+
+  [ "$count" -gt 0 ] || die "No emulator or device. Start one from Android Studio, then re-run."
+  [ "$count" -eq 1 ] || die "$count devices attached: $(echo $serials)
+      Set ANDROID_SERIAL to the one you want."
+
+  printf '%s\n' "$serials"
+}
+
+# Emulators reach the host through a fixed alias; physical devices do not.
+android_is_emulator() {
+  local adb="$1" serial="$2"
+
+  case "$serial" in emulator-*) return 0 ;; esac
+  [ "$("$adb" -s "$serial" shell getprop ro.boot.qemu 2>/dev/null | tr -d '\r\n')" = "1" ]
+}
+
 # --- web bundle -------------------------------------------------------------
 
 # Three NEXT_PUBLIC_* values are inlined into the JavaScript at build time and
@@ -97,7 +132,9 @@ ${BOLD}Animalesko mobile${OFF}
 
   ${BOLD}Environment${OFF}
     API_URL            Override the API the build points at
-    DEV_API_URL        Dev default (http://localhost:3000)
+    DEV_API_URL        Dev default (http://10.0.2.2:3000 on an emulator,
+                       http://localhost:3000 over a USB tunnel)
+    ANDROID_SERIAL     Which attached device to use; required if several are
     PROD_API_URL       Release default (https://app.animalesko.org)
     PROD_WEB_URL       Origin for share/deep links (defaults to PROD_API_URL)
     PROD_PLUS_URL      Provider app (https://backoffice.animalesko.org)
@@ -158,18 +195,48 @@ cmd_dev_android() {
   local adb; adb="$(adb_bin)"
   [ -x "$adb" ] || die "adb not found at $adb"
 
-  local devices
-  devices=$("$adb" devices | tail -n +2 | grep -c "device$" || true)
-  [ "$devices" -gt 0 ] || die "No emulator or device. Start one from Android Studio, then re-run."
+  local serial; serial="$(android_device "$adb")"
+  step "Target"
+  info "device      $serial"
 
-  step "Forwarding port 3000 to this machine"
-  # Inside an emulator `localhost` is the emulator itself. A reverse tunnel is
-  # more reliable than the 10.0.2.2 host alias and works over USB too.
-  "$adb" reverse tcp:3000 tcp:3000
-  info "emulator localhost:3000 -> host localhost:3000"
+  # Warned about rather than fatal — someone may be pointing the build at a
+  # deployment with API_URL. But an app whose every request is refused looks
+  # exactly like a broken app: the home screen still renders, because
+  # `output: "export"` baked its numbers in at build time, and only the calls
+  # that need the server (sign-in first) fail.
+  if command -v curl >/dev/null 2>&1 && [ -z "${API_URL:-}" ]; then
+    curl -sf -m 3 -o /dev/null http://localhost:3000/api/auth/ok ||
+      warn "Nothing answering on http://localhost:3000 — start it with \`pnpm dev\` or the app will have no API."
+  fi
 
-  build_web "${API_URL:-${DEV_API_URL:-http://localhost:3000}}" \
-    "${DEV_WEB_URL:-http://localhost:3000}" "${DEV_PLUS_URL:-http://localhost:3001}"
+  # How the app reaches this machine's dev server.
+  #
+  # `adb reverse` was what this used to do for every target, on the theory that
+  # a tunnel beats the 10.0.2.2 alias because it also works over USB. Half
+  # right: the tunnel does not survive. It disappears when the app is
+  # force-stopped or the adb server is restarted, and `adb reverse --list` goes
+  # on reporting a mapping whose connections are already being refused — so the
+  # one obvious way to check it says everything is fine.
+  #
+  # 10.0.2.2 is the emulator's fixed alias for the host loopback. There is
+  # nothing to keep alive, and network_security_config_debug.xml already permits
+  # cleartext to it. A physical device has no such alias, so the tunnel stays
+  # the answer there and is re-established on every run.
+  local api_host
+  if android_is_emulator "$adb" "$serial"; then
+    api_host="10.0.2.2"
+    step "Emulator — the build will call the host at $api_host"
+  else
+    api_host="localhost"
+    step "Forwarding ports 3000 and 3001 to this machine"
+    "$adb" -s "$serial" reverse tcp:3000 tcp:3000
+    "$adb" -s "$serial" reverse tcp:3001 tcp:3001
+    info "device localhost:3000 -> host localhost:3000"
+    warn "The tunnel dies with the adb server and on force-stop; re-run this command if the app stops reaching the API."
+  fi
+
+  build_web "${API_URL:-${DEV_API_URL:-http://$api_host:3000}}" \
+    "${DEV_WEB_URL:-http://$api_host:3000}" "${DEV_PLUS_URL:-http://$api_host:3001}"
 
   step "Syncing into the Android project"
   # CAP_DEV opens allowMixedContent: the bundle is served from https://localhost
@@ -178,14 +245,14 @@ cmd_dev_android() {
   CAP_DEV=true pnpm exec cap sync android
 
   step "Installing"
-  (cd android && ANDROID_HOME="$(android_sdk)" ./gradlew installDebug -q)
+  (cd android && ANDROID_HOME="$(android_sdk)" ANDROID_SERIAL="$serial" ./gradlew installDebug -q)
 
   step "Launching"
-  "$adb" shell am force-stop "$APP_ID" >/dev/null 2>&1 || true
-  "$adb" shell monkey -p "$APP_ID" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+  "$adb" -s "$serial" shell am force-stop "$APP_ID" >/dev/null 2>&1 || true
+  "$adb" -s "$serial" shell monkey -p "$APP_ID" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 
   printf '\n%s running%s  %s\n' "$GREEN" "$OFF" "$APP_ID"
-  info "logs: $(adb_bin) logcat -s Capacitor/Console"
+  info "logs: $(adb_bin) -s $serial logcat -s Capacitor/Console"
 }
 
 cmd_dev_ios() {

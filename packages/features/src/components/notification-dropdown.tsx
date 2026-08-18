@@ -50,7 +50,13 @@ function relativeTime(date: Date): string {
   if (days === 1) return "Ontem";
   if (days < 7) return `Há ${days} dias`;
 
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(date);
+  // Absolute fallback for anything older than a week: pin to the venue
+  // timezone so the date shown doesn't shift with the device's timezone.
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "America/Sao_Paulo",
+  }).format(date);
 }
 
 /**

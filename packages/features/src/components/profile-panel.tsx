@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  ProfileSkeleton,
   initials,
 } from "@animalesko/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -59,7 +60,7 @@ export function ProfilePanel() {
   const profile = useQuery(trpc.profile.me.queryOptions());
 
   if (profile.isPending) {
-    return <p className="text-sm text-muted-foreground">Carregando…</p>;
+    return <ProfileSkeleton />;
   }
 
   if (!profile.data) return null;
@@ -71,7 +72,7 @@ export function ProfilePanel() {
       <div className="border-b border-border pb-6 text-center">
         <Avatar className="mx-auto mb-3 size-20">
           <AvatarImage src={me.image ?? undefined} alt="" />
-          <AvatarFallback className="bg-gradient-primary text-2xl font-bold text-primary-foreground">
+          <AvatarFallback className="bg-gradient-primary text-2xl font-bold text-gradient-foreground">
             {initials(me.name)}
           </AvatarFallback>
         </Avatar>

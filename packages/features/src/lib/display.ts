@@ -1,3 +1,5 @@
+import { BRAZIL_TIME_ZONE } from "@animalesko/api/schemas";
+
 import type { PetSize, Sex, Species } from "@animalesko/api/schemas";
 
 /**
@@ -51,9 +53,21 @@ export function petImage(listing: {
   return listing.photos[0]?.url ?? listing.pet.photoUrl ?? PLACEHOLDER_PET_IMAGE;
 }
 
+/**
+ * Every listing, appointment, and booking is at a venue in Brazil, so the
+ * wall-clock time we display must stay pinned to Brazil's timezone
+ * regardless of the device rendering it — otherwise a booking made for
+ * 09:00 in São Paulo silently reads as some other hour on a device set to
+ * a different timezone (e.g. a browser in GMT).
+ */
+
 /** "12 de março", "12 de março às 14:00" — pt-BR, one formatter per shape. */
 export function formatDatePtBR(date: Date): string {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long" }).format(date);
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    timeZone: BRAZIL_TIME_ZONE,
+  }).format(date);
 }
 
 export function formatDateTimePtBR(date: Date): string {
@@ -62,14 +76,23 @@ export function formatDateTimePtBR(date: Date): string {
     month: "long",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: BRAZIL_TIME_ZONE,
   }).format(date);
 }
 
 export function formatShortDatePtBR(date: Date): string {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(date);
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: BRAZIL_TIME_ZONE,
+  }).format(date);
 }
 
 /** "março de 2026" — the grouping heading in the service history. */
 export function formatMonthPtBR(date: Date): string {
-  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(date);
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    year: "numeric",
+    timeZone: BRAZIL_TIME_ZONE,
+  }).format(date);
 }

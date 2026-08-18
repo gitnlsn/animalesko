@@ -16,6 +16,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  ListSkeleton,
   toast,
 } from "@animalesko/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -24,6 +25,7 @@ import { useState } from "react";
 
 import { PetForm } from "./pet-form.tsx";
 import { SPECIES_EMOJI, SPECIES_LABELS } from "../lib/display.ts";
+import { MY_PETS_LIST_INPUT } from "../lib/query-inputs.ts";
 import { useTRPC } from "../trpc.ts";
 
 import type { PetDTO } from "@animalesko/api";
@@ -43,7 +45,7 @@ export function MyPets() {
   const [editing, setEditing] = useState<PetDTO | "new" | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PetDTO | null>(null);
 
-  const petsQuery = useQuery(trpc.pet.list.queryOptions({ includeDeceased: false, limit: 50 }));
+  const petsQuery = useQuery(trpc.pet.list.queryOptions(MY_PETS_LIST_INPUT));
   const quotaQuery = useQuery(trpc.pet.quota.queryOptions());
 
   const deletePet = useMutation(
@@ -100,7 +102,7 @@ export function MyPets() {
       ) : null}
 
       {petsQuery.isPending ? (
-        <p className="text-sm text-muted-foreground">Carregando…</p>
+        <ListSkeleton count={3} withMedia />
       ) : pets.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-12 text-center">

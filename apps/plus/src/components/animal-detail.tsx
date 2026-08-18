@@ -26,6 +26,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  DetailSkeleton,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -199,7 +200,7 @@ function HealthRecords({ petId }: { petId: string }) {
 
       <CardContent className="space-y-3">
         {records.isPending ? (
-          <p className="text-sm text-muted-foreground">Carregando…</p>
+          <DetailSkeleton />
         ) : items.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">Nenhum registro ainda.</p>
         ) : (
@@ -442,7 +443,7 @@ function Vaccinations({ petId }: { petId: string }) {
 
       <CardContent className="space-y-3">
         {vaccinations.isPending ? (
-          <p className="text-sm text-muted-foreground">Carregando…</p>
+          <DetailSkeleton />
         ) : items.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             Nenhuma vacina registrada.
@@ -699,7 +700,7 @@ function Reminders({ petId, petName }: { petId: string; petName: string }) {
         </p>
 
         {reminders.isPending ? (
-          <p className="text-sm text-muted-foreground">Carregando…</p>
+          <DetailSkeleton />
         ) : items.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             Nenhum lembrete para {petName}.

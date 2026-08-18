@@ -12,6 +12,10 @@ import { useEffect } from "react";
 import { nativePlatform } from "~/lib/native-platform.ts";
 import { WEB_URL } from "~/lib/api-url.ts";
 
+/** The origins the WebView itself serves the bundle from: Android uses
+ *  https://localhost, iOS capacitor://localhost. */
+const NATIVE_SCHEMES = ["https:", "capacitor:"];
+
 /**
  * Everything that only makes sense on a device.
  *
@@ -66,7 +70,17 @@ export function NativeBootstrap() {
         return;
       }
 
-      if (!WEB_URL.endsWith(parsed.host) && parsed.protocol.startsWith("http")) return;
+      // Accept only the two shapes a real deep link can take: an https link
+      // to our own host, or the WebView's own origin. The previous condition
+      // ignored a URL only when the host mismatched *and* the scheme was
+      // http(s), so any custom-scheme URL skipped the host check entirely and
+      // was pushed straight into the router — an arbitrary app could steer the
+      // user's screen, and a bare `scheme://host/` navigated to the home tab
+      // for no visible reason.
+      const isOwnWebOrigin = parsed.protocol.startsWith("http") && WEB_URL.endsWith(parsed.host);
+      const isNativeOrigin =
+        NATIVE_SCHEMES.includes(parsed.protocol) && parsed.host === "localhost";
+      if (!isOwnWebOrigin && !isNativeOrigin) return;
 
       const petId = /^\/pet\/([^/?#]+)/.exec(parsed.pathname)?.[1];
       if (petId) {

@@ -30,6 +30,7 @@ import {
   FormLabel,
   FormMessage,
   Input,
+  ListSkeleton,
   Select,
   SelectContent,
   SelectItem,
@@ -179,7 +180,7 @@ export function OfferingsPanel() {
       </div>
 
       {offerings.isPending ? (
-        <p className="text-sm text-muted-foreground">Carregando…</p>
+        <ListSkeleton count={3} />
       ) : offerings.data?.length === 0 ? (
         <Card>
           <CardContent className="p-10 text-center">

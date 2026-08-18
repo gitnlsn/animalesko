@@ -19,6 +19,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  DetailSkeleton,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -172,7 +173,7 @@ export function ListingDetail({ listing }: { listing: ProviderListingDTO }) {
 
         <CardContent className="space-y-3">
           {applications.isPending ? (
-            <p className="text-sm text-muted-foreground">Carregando…</p>
+            <DetailSkeleton />
           ) : items.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               {status === "AVAILABLE"

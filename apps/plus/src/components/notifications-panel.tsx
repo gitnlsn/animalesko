@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, Button, Card, CardContent, cn, toast } from "@animalesko/ui";
+import { Badge, Button, Card, CardContent, ListSkeleton, cn, toast } from "@animalesko/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck } from "lucide-react";
 import Link from "next/link";
@@ -62,7 +62,7 @@ export function NotificationsPanel() {
       </div>
 
       {notifications.isPending ? (
-        <p className="text-sm text-muted-foreground">Carregando…</p>
+        <ListSkeleton count={5} />
       ) : items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-12 text-center">

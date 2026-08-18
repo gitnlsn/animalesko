@@ -14,6 +14,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  DetailSkeleton,
   Label,
   RadioGroup,
   RadioGroupItem,
@@ -107,7 +108,7 @@ export function PaymentView() {
   }
 
   if (booking.isPending) {
-    return <p className="text-sm text-muted-foreground">Carregando…</p>;
+    return <DetailSkeleton />;
   }
 
   if (booking.isError || !booking.data) {

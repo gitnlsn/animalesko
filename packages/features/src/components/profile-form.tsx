@@ -88,7 +88,7 @@ export function ProfileForm({ profile, open, onOpenChange }: ProfileFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+      <DialogContent className="max-h-[90dvh] max-w-md overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-primary">Editar perfil</DialogTitle>
           <DialogDescription>Atualize suas informações pessoais</DialogDescription>

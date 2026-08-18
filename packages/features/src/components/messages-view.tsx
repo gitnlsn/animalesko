@@ -8,7 +8,9 @@ import {
   Card,
   CardContent,
   Input,
+  ListSkeleton,
   ScrollArea,
+  ThreadSkeleton,
   cn,
   initials,
   toast,
@@ -18,6 +20,7 @@ import { ArrowLeft, MapPin, MessageCircle, Send } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { MESSAGES_CONVERSATIONS_INPUT } from "../lib/query-inputs.ts";
 import { useSession } from "../lib/session-context.tsx";
 import { useTRPC } from "../trpc.ts";
 
@@ -49,10 +52,12 @@ export function MessagesView() {
 
 function ConversationList({ onOpen }: { onOpen: (id: string) => void }) {
   const trpc = useTRPC();
-  const conversations = useQuery(trpc.message.conversations.queryOptions({ limit: 30 }));
+  const conversations = useQuery(
+    trpc.message.conversations.queryOptions(MESSAGES_CONVERSATIONS_INPUT),
+  );
 
   if (conversations.isPending) {
-    return <p className="text-sm text-muted-foreground">Carregando…</p>;
+    return <ListSkeleton count={5} withMedia />;
   }
 
   const items = conversations.data ?? [];
@@ -84,7 +89,7 @@ function ConversationList({ onOpen }: { onOpen: (id: string) => void }) {
               className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:bg-muted/50"
             >
               <Avatar className="size-12 shrink-0">
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                <AvatarFallback className="bg-gradient-primary text-gradient-foreground">
                   {initials(name)}
                 </AvatarFallback>
               </Avatar>
@@ -152,7 +157,13 @@ function Thread({ conversationId, onBack }: { conversationId: string; onBack: ()
   const messages = thread.data ?? [];
 
   return (
-    <div className="flex h-[calc(100dvh-8rem)] flex-col">
+    // 8rem was a guess at the surrounding chrome, and a guess is wrong on any
+    // device that adds to it: the iOS home indicator and Android's gesture bar
+    // both sit inside the dynamic viewport, so the composer ended up under them
+    // or below the fold entirely. Subtracting the inset the platform actually
+    // reports keeps the last message and the text field on screen without
+    // needing to know which platform is asking.
+    <div className="flex h-[calc(100dvh-8rem-env(safe-area-inset-bottom))] flex-col">
       <Button variant="ghost" size="sm" className="mb-2 self-start" onClick={onBack}>
         <ArrowLeft size={16} />
         Todas as conversas
@@ -160,7 +171,7 @@ function Thread({ conversationId, onBack }: { conversationId: string; onBack: ()
 
       <ScrollArea className="flex-1 rounded-xl border bg-card p-3">
         {thread.isPending ? (
-          <p className="p-4 text-center text-sm text-muted-foreground">Carregando…</p>
+          <ThreadSkeleton />
         ) : messages.length === 0 ? (
           <p className="p-8 text-center text-sm text-muted-foreground">
             Nenhuma mensagem ainda. Diga olá 👋
@@ -202,9 +213,12 @@ function Thread({ conversationId, onBack }: { conversationId: string; onBack: ()
                       dateTime={message.createdAt.toISOString()}
                       className="mt-1 block text-right text-[0.65rem] opacity-60"
                     >
+                      {/* Pinned to the venue timezone so a device set to a
+                          different timezone doesn't shift the hour shown. */}
                       {new Intl.DateTimeFormat("pt-BR", {
                         hour: "2-digit",
                         minute: "2-digit",
+                        timeZone: "America/Sao_Paulo",
                       }).format(message.createdAt)}
                     </time>
                   </div>

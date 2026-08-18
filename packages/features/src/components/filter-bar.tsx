@@ -88,7 +88,7 @@ export function FilterBar() {
           </Button>
         </SheetTrigger>
 
-        <SheetContent side="bottom" className="mx-auto max-h-[80vh] max-w-md">
+        <SheetContent side="bottom" className="mx-auto max-h-[80dvh] max-w-md">
           <SheetHeader>
             <div className="flex items-center justify-between">
               <SheetTitle>Filtrar pets</SheetTitle>

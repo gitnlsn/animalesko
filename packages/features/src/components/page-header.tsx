@@ -22,14 +22,14 @@ export function PageHeader({ title, subtitle, backTo, actions }: PageHeaderProps
   const router = useRouter();
 
   return (
-    <header className="sticky top-0 z-40 bg-gradient-primary text-primary-foreground shadow-brand-md">
+    <header className="sticky top-0 z-40 bg-gradient-primary text-gradient-foreground shadow-brand-md">
       {/* Top inset for the native status bar — see `app-header.tsx`. */}
       <div className="mx-auto flex max-w-md items-center gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
         <Button
           variant="ghost"
           size="icon"
           aria-label="Voltar"
-          className="shrink-0 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+          className="shrink-0 text-gradient-foreground hover:bg-gradient-foreground/10 hover:text-gradient-foreground"
           onClick={() => (backTo ? router.push(backTo) : router.back())}
         >
           <ArrowLeft size={20} />
@@ -38,7 +38,7 @@ export function PageHeader({ title, subtitle, backTo, actions }: PageHeaderProps
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-lg font-bold">{title}</h1>
           {subtitle ? (
-            <p className="truncate text-xs text-primary-foreground/80">{subtitle}</p>
+            <p className="truncate text-xs text-gradient-foreground/80">{subtitle}</p>
           ) : null}
         </div>
 

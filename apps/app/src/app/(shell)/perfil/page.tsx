@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { ProfilePanel } from "@animalesko/features/profile-panel";
+import { GAMIFICATION_PROFILE_INPUT } from "@animalesko/features/query-inputs";
 import { getQueryClient, trpc } from "~/trpc/server.ts";
 
 import type { Metadata } from "next";
@@ -23,7 +24,7 @@ export default async function ProfilePage() {
 
   await Promise.all([
     queryClient.prefetchQuery(trpc.profile.me.queryOptions()),
-    queryClient.prefetchQuery(trpc.gamification.profile.queryOptions({ limit: 5 })),
+    queryClient.prefetchQuery(trpc.gamification.profile.queryOptions(GAMIFICATION_PROFILE_INPUT)),
   ]);
 
   return (

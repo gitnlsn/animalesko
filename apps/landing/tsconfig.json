@@ -1,0 +1,17 @@
+{
+  "extends": "@animalesko/config/tsconfig/nextjs.json",
+  "compilerOptions": {
+    // `next/image-types/global` is what declares an imported .webp as a module.
+    // It normally arrives through the generated next-env.d.ts, which this repo
+    // deliberately does not track — so on a clean checkout, where no Next
+    // command has run yet, `tsc` saw eight untyped image imports and CI failed
+    // while every developer's machine passed. Naming it here does not depend on
+    // a generated file existing.
+    "types": ["node", "next/image-types/global"],
+    "paths": {
+      "~/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next", ".turbo"]
+}

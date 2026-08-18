@@ -1,5 +1,4 @@
-import { PageHeader } from "@animalesko/features/page-header";
-import { FavoritesList } from "@animalesko/features/favorites-list";
+import { FavoritesScreen } from "@animalesko/features/favorites-screen";
 
 import { Gated } from "~/components/gated.tsx";
 
@@ -10,14 +9,7 @@ export const metadata: Metadata = { title: "Meus favoritos" };
 export default function Page() {
   return (
     <Gated next="/favoritos">
-      <PageHeader
-        title="Meus favoritos"
-        subtitle="Pets e serviços que você guardou"
-        backTo="/perfil"
-      />
-      <main className="mx-auto max-w-md p-4">
-        <FavoritesList />
-      </main>
+      <FavoritesScreen />
     </Gated>
   );
 }

@@ -5,6 +5,7 @@ import {
   formatBRL,
   formatPrice,
   quotePriceCents,
+  brazilWallClock,
   type PriceUnit,
 } from "@animalesko/api/schemas";
 import {
@@ -70,11 +71,15 @@ interface BookingDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/**
+ * The picker gives a calendar day and a "HH:mm"; the booking needs the instant
+ * at which that day reads that time *in Brazil*. `setHours` would resolve it
+ * against the device instead, so the same slot booked from another timezone
+ * stored a different moment.
+ */
 function atTime(day: Date, time: string): Date {
   const [hours, minutes] = time.split(":").map(Number);
-  const result = new Date(day);
-  result.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-  return result;
+  return brazilWallClock(day, hours ?? 0, minutes ?? 0);
 }
 
 export function BookingDialog({ offering, onOpenChange }: BookingDialogProps) {
@@ -157,7 +162,7 @@ export function BookingDialog({ offering, onOpenChange }: BookingDialogProps) {
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+      <DialogContent className="max-h-[90dvh] max-w-md overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{offering.title}</DialogTitle>
           <DialogDescription>

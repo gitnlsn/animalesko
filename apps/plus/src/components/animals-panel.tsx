@@ -29,6 +29,7 @@ import {
   FormLabel,
   FormMessage,
   Input,
+  ListSkeleton,
   Select,
   SelectContent,
   SelectItem,
@@ -137,7 +138,7 @@ export function AnimalsPanel() {
       </div>
 
       {animals.isPending ? (
-        <p className="text-sm text-muted-foreground">Carregando…</p>
+        <ListSkeleton count={4} withMedia />
       ) : items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-12 text-center">

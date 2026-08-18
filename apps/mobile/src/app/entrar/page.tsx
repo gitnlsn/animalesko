@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInForm } from "@animalesko/features/sign-in-form";
+import { SignInScreen } from "@animalesko/features/sign-in-screen";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
@@ -15,11 +15,7 @@ import { Suspense } from "react";
 function SignIn() {
   const next = useSearchParams().get("next");
 
-  return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-10">
-      <SignInForm next={next ?? "/meus-pets"} />
-    </main>
-  );
+  return <SignInScreen next={next} />;
 }
 
 export default function SignInPage() {

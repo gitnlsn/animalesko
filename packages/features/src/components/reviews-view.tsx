@@ -10,6 +10,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  ListSkeleton,
   Textarea,
   cn,
   initials,
@@ -83,7 +84,7 @@ export function ReviewsView() {
   const mine = useQuery(trpc.review.mine.queryOptions());
 
   if (pending.isPending || mine.isPending) {
-    return <p className="text-sm text-muted-foreground">Carregando…</p>;
+    return <ListSkeleton count={4} />;
   }
 
   const awaiting = pending.data ?? [];

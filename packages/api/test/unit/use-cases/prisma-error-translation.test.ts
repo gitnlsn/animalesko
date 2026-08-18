@@ -33,6 +33,20 @@ const adapterMeta = (fields: string[]) => ({
   driverAdapterError: { name: "DriverAdapterError", cause: { constraint: { fields } } },
 });
 
+/**
+ * What `@prisma/adapter-pg` 7.9 actually produces: no `constraint`, no
+ * `meta.target`, just the raw Postgres text. Prisma's own message degrades to
+ * "Unique constraint failed on the (not available)", so the index name in that
+ * string is the only thing left to match on.
+ */
+const rawAdapterMeta = (originalMessage: string) => ({
+  modelName: "Pet",
+  driverAdapterError: {
+    name: "DriverAdapterError",
+    cause: { originalCode: "23505", kind: "UniqueConstraintViolation", originalMessage },
+  },
+});
+
 describe("unique-constraint translation", () => {
   it("reads fields from the driver-adapter shape", () => {
     expect(uniqueConstraintFields(knownRequestError(adapterMeta(["microchip"])))).toEqual([
@@ -49,8 +63,53 @@ describe("unique-constraint translation", () => {
     ]);
   });
 
+  it("reads the index name out of the adapter's raw Postgres message", () => {
+    expect(
+      uniqueConstraintFields(
+        knownRequestError(
+          rawAdapterMeta('duplicate key value violates unique constraint "pet_microchip_key"'),
+        ),
+      ),
+    ).toEqual(["pet_microchip_key"]);
+  });
+
+  /**
+   * Postgres translates this sentence according to the server's `lc_messages`,
+   * so a developer running a pt_BR cluster must get the same answer as CI. Only
+   * the quoting around the index name is stable, which is what is matched.
+   */
+  it("reads it regardless of the language Postgres reports in", () => {
+    expect(
+      uniqueConstraintFields(
+        knownRequestError(
+          rawAdapterMeta(
+            'duplicar valor da chave viola a restrição de unicidade "pet_microchip_key"',
+          ),
+        ),
+      ),
+    ).toEqual(["pet_microchip_key"]);
+  });
+
+  it("matches the camelCase columns Prisma embeds in its index names", () => {
+    const review = knownRequestError(
+      rawAdapterMeta('duplicate key value violates unique constraint "review_bookingId_key"'),
+    );
+    const contact = knownRequestError(
+      rawAdapterMeta(
+        'duplicate key value violates unique constraint "client_contact_orgId_phone_key"',
+      ),
+    );
+
+    expect(isUniqueViolationOn(review, "bookingId")).toBe(true);
+    expect(isUniqueViolationOn(contact, "phone")).toBe(true);
+    expect(isUniqueViolationOn(review, "microchip")).toBe(false);
+  });
+
   it("returns nothing rather than throwing when metadata is absent", () => {
     expect(uniqueConstraintFields(knownRequestError({}))).toEqual([]);
+    expect(
+      uniqueConstraintFields(knownRequestError(rawAdapterMeta("no quoted name in here"))),
+    ).toEqual([]);
   });
 
   it("matches only the field it was asked about", () => {
