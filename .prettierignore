@@ -1,0 +1,16 @@
+# Prettier reads only the ignore files it is handed, and `--ignore-path`
+# replaces its defaults — so anything ignored by a *nested* .gitignore is
+# invisible to it. That is not hypothetical: `cap sync` copies the exported web
+# bundle and its config into apps/mobile/android/app/src/main/assets, which
+# apps/mobile/android/.gitignore covers, and `pnpm format:check` then failed on
+# thousands of generated chunks after every Android build while a clean checkout
+# passed. The two files disagreeing is the whole bug, so this repeats those
+# paths where prettier can see them.
+
+# Generated native payloads: the synced web bundle plus the Capacitor config and
+# plugin manifest that `cap sync` writes next to it.
+apps/mobile/android/app/src/main/assets/
+apps/mobile/ios/App/App/public/
+
+# Static exports.
+apps/*/out/
