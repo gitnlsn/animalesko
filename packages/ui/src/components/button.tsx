@@ -8,17 +8,19 @@ import * as React from "react";
 import { cn } from "../lib/cn.ts";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,scale] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-dark",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        success: "bg-success text-success-foreground hover:bg-success/90",
-        outline: "border border-border bg-background hover:bg-muted",
-        ghost: "hover:bg-muted hover:text-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "bg-primary text-primary-foreground hover:bg-primary-dark active:bg-primary-dark",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/90 active:bg-secondary/80",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80",
+        success: "bg-success text-success-foreground hover:bg-success/90 active:bg-success/80",
+        outline: "border border-border bg-background hover:bg-muted active:bg-muted",
+        ghost: "hover:bg-muted hover:text-foreground active:bg-muted",
+        link: "text-primary underline-offset-4 hover:underline active:opacity-80",
       },
       size: {
         sm: "h-8 px-3 text-xs",
