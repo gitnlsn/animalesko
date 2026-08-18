@@ -2,6 +2,18 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "app",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@animalesko/app", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "plus",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@animalesko/plus", "dev"],
+      "port": 3001
+    },
+    {
       "name": "landing",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@animalesko/landing", "dev"],
