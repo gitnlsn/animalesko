@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Lets CI be started by hand from the Actions tab. A pull request opened by a
+  # token — the `gh pr create` path — does not always raise the `pull_request`
+  # event, and the checks then sit empty with nothing to re-run. Without a
+  # `workflow_dispatch` trigger there is no way to ask for the run at all.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
