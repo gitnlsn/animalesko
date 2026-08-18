@@ -157,7 +157,13 @@ function Thread({ conversationId, onBack }: { conversationId: string; onBack: ()
   const messages = thread.data ?? [];
 
   return (
-    <div className="flex h-[calc(100dvh-8rem)] flex-col">
+    // 8rem was a guess at the surrounding chrome, and a guess is wrong on any
+    // device that adds to it: the iOS home indicator and Android's gesture bar
+    // both sit inside the dynamic viewport, so the composer ended up under them
+    // or below the fold entirely. Subtracting the inset the platform actually
+    // reports keeps the last message and the text field on screen without
+    // needing to know which platform is asking.
+    <div className="flex h-[calc(100dvh-8rem-env(safe-area-inset-bottom))] flex-col">
       <Button variant="ghost" size="sm" className="mb-2 self-start" onClick={onBack}>
         <ArrowLeft size={16} />
         Todas as conversas
