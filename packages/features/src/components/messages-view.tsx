@@ -205,9 +205,12 @@ function Thread({ conversationId, onBack }: { conversationId: string; onBack: ()
                       dateTime={message.createdAt.toISOString()}
                       className="mt-1 block text-right text-[0.65rem] opacity-60"
                     >
+                      {/* Pinned to the venue timezone so a device set to a
+                          different timezone doesn't shift the hour shown. */}
                       {new Intl.DateTimeFormat("pt-BR", {
                         hour: "2-digit",
                         minute: "2-digit",
+                        timeZone: "America/Sao_Paulo",
                       }).format(message.createdAt)}
                     </time>
                   </div>
