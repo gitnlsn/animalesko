@@ -32,6 +32,17 @@
   /* Brand blue */
   --primary: hsl(213 64% 41%);
   --primary-foreground: hsl(0 0% 100%);
+
+  /**
+   * Text on a brand gradient.
+   *
+   * The gradients stay deep blue in both themes, but --primary-foreground has
+   * to flip dark in dark mode because --primary flips light — so a header that
+   * borrowed it painted near-black text on a dark blue bar. Gradient surfaces
+   * need a foreground that tracks the gradient, not the solid primary, which is
+   * why this is its own token and why it holds the same value in both blocks.
+   */
+  --gradient-foreground: hsl(0 0% 100%);
   --primary-light: hsl(213 64% 85%);
   --primary-dark: hsl(213 64% 31%);
 
@@ -94,6 +105,7 @@
   /* Lightened so the brand stays legible on a dark ground. */
   --primary: hsl(213 74% 62%);
   --primary-foreground: hsl(222 47% 11%);
+  --gradient-foreground: hsl(0 0% 100%);
   --primary-light: hsl(213 64% 30%);
   --primary-dark: hsl(213 74% 72%);
 
@@ -147,6 +159,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-gradient-foreground: var(--gradient-foreground);
   --color-primary-light: var(--primary-light);
   --color-primary-dark: var(--primary-dark);
   --color-secondary: var(--secondary);

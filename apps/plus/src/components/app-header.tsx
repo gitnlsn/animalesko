@@ -90,7 +90,7 @@ export function AppHeader() {
               <Button variant="ghost" className="gap-2 px-2">
                 <Avatar className="size-8">
                   <AvatarImage src={user.image ?? undefined} alt="" />
-                  <AvatarFallback className="bg-gradient-primary text-xs text-primary-foreground">
+                  <AvatarFallback className="bg-gradient-primary text-xs text-gradient-foreground">
                     {initials(user.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -131,7 +131,7 @@ function LogoMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="gap-2 px-2">
           <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-primary">
-            <PawPrint size={18} className="text-primary-foreground" />
+            <PawPrint size={18} className="text-gradient-foreground" />
           </span>
           <span className="text-lg font-bold text-primary">
             Animalesko <span className="text-secondary">Plus</span>

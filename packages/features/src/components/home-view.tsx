@@ -35,9 +35,9 @@ export function HomeView() {
         <PetOfTheDay listing={petOfTheDay.data} />
       ) : null}
 
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-hero p-6 text-primary-foreground shadow-brand-lg">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-hero p-6 text-gradient-foreground shadow-brand-lg">
         <h2 className="mb-2 text-2xl font-bold">Encontre seu novo melhor amigo</h2>
-        <p className="mb-4 text-primary-foreground/90">
+        <p className="mb-4 text-gradient-foreground/90">
           {stats.isPending
             ? "Carregando…"
             : stats.data?.availableListings === 0

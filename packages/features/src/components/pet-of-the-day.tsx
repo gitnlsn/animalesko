@@ -27,8 +27,8 @@ export function PetOfTheDay({ listing }: { listing: PublicListingDTO }) {
   return (
     <Card className="animate-in overflow-hidden bg-gradient-card p-0 shadow-brand-lg fade-in">
       <div className="flex items-center gap-2 bg-gradient-primary p-3">
-        <Sparkles className="text-primary-foreground" size={20} />
-        <h2 className="text-lg font-bold text-primary-foreground">🐾 Pet do Dia</h2>
+        <Sparkles className="text-gradient-foreground" size={20} />
+        <h2 className="text-lg font-bold text-gradient-foreground">🐾 Pet do Dia</h2>
       </div>
 
       <div className="flex gap-4 p-4">
