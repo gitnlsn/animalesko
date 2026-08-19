@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Skeleton } from "@animalesko/ui";
+import { Card, DetailScreenSkeleton } from "@animalesko/ui";
 import { useQuery } from "@tanstack/react-query";
 import { PawPrint } from "lucide-react";
 
@@ -20,14 +20,13 @@ export function ListingDetailView({ id }: { id: string }) {
   const trpc = useTRPC();
   const listing = useQuery(trpc.catalog.listingById.queryOptions({ id }));
 
+  // Shaped like `ListingDetail`, which opens with a sticky gradient `PageHeader`
+  // and a full-bleed photo. The placeholder this replaced had neither, so the
+  // header appeared out of nowhere and the photo un-inset itself by 16px a side
+  // the moment the data landed — two layout jumps bought by a skeleton meant to
+  // prevent one.
   if (listing.isPending) {
-    return (
-      <div className="space-y-4 p-4">
-        <Skeleton className="aspect-4/3 w-full rounded-2xl" />
-        <Skeleton className="h-8 w-2/3" />
-        <Skeleton className="h-24 w-full" />
-      </div>
-    );
+    return <DetailScreenSkeleton />;
   }
 
   if (listing.isError || !listing.data) {

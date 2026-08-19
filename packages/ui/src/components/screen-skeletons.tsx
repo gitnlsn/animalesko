@@ -49,14 +49,43 @@ export function ListSkeleton({
 }
 
 /** The two- or three-up counters that head the home and profile screens. */
-export function StatGridSkeleton({ count = 2, className }: { count?: number; className?: string }) {
+export function StatGridSkeleton({
+  count = 2,
+  className,
+  detailed = false,
+}: {
+  count?: number;
+  className?: string;
+  /**
+   * Match `StatsCard` — subtitle line under the value, icon tile beside it —
+   * rather than a bare counter.
+   *
+   * The plain shape is 76px tall and `StatsCard` is 108px (both are `p-4` over
+   * a 76px body; the counter's body is only 44px), so using it on the home
+   * screen left a 32px step that closed the moment the counts landed.
+   */
+  detailed?: boolean;
+}) {
   return (
     <div className={cn("grid gap-3", count === 3 ? "grid-cols-3" : "grid-cols-2", className)}>
       {Array.from({ length: count }, (_, i) => (
         <Card key={i}>
-          <CardContent className="space-y-2 p-4">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-6 w-10" />
+          <CardContent className={cn("p-4", !detailed && "space-y-2")}>
+            {detailed ? (
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-8 w-12" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <Skeleton className="size-12 shrink-0 rounded-lg" />
+              </div>
+            ) : (
+              <>
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-6 w-10" />
+              </>
+            )}
           </CardContent>
         </Card>
       ))}
@@ -99,6 +128,88 @@ export function ThreadSkeleton({ count = 5, className }: { count?: number; class
           />
         </div>
       ))}
+    </div>
+  );
+}
+
+/**
+ * The gradient bar every secondary screen opens with.
+ *
+ * Screens that render a `PageHeader` were showing placeholders that did not
+ * include one, so the bar appeared at the top the moment data landed and pushed
+ * everything down. A skeleton that omits the one element guaranteed to be there
+ * buys a layout jump rather than preventing one.
+ */
+export function PageHeaderSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "bg-gradient-primary px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4",
+        className,
+      )}
+    >
+      <div className="mx-auto flex max-w-md items-center gap-3">
+        <Skeleton className="size-10 shrink-0 rounded-lg bg-gradient-foreground/20" />
+        <Skeleton className="h-5 w-40 bg-gradient-foreground/20" />
+      </div>
+    </div>
+  );
+}
+
+/** One adoption card, shaped like `PetCard`: photo above, details below. */
+export function PetCardSkeleton({ className }: { className?: string }) {
+  return (
+    <Card className={cn("overflow-hidden p-0", className)}>
+      <Skeleton className="aspect-4/3 w-full rounded-none" />
+
+      <div className="space-y-3 p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-5 w-1/2" />
+            <Skeleton className="h-3 w-1/3" />
+          </div>
+          <Skeleton className="h-3 w-14 shrink-0" />
+        </div>
+
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-4/5" />
+
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-8 w-24 rounded-lg" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/**
+ * A full secondary screen: header bar, full-bleed photo, then the body.
+ *
+ * The photo is deliberately outside the padded container, because the real one
+ * is — a skeleton that insets it by 16px each side makes the image visibly jump
+ * outward when it loads.
+ */
+export function DetailScreenSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn("min-h-dvh bg-background", className)}>
+      <PageHeaderSkeleton />
+      <Skeleton className="aspect-4/3 w-full rounded-none" />
+
+      <div className="mx-auto max-w-md space-y-4 p-4">
+        <Skeleton className="h-6 w-1/2" />
+        <Skeleton className="h-3 w-1/3" />
+
+        <div className="flex gap-2">
+          <Skeleton className="h-6 w-16 rounded-full" />
+          <Skeleton className="h-6 w-16 rounded-full" />
+        </div>
+
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-2/3" />
+        <Skeleton className="h-11 w-full rounded-lg" />
+      </div>
     </div>
   );
 }

@@ -8,7 +8,11 @@ import * as React from "react";
 import { cn } from "../lib/cn.ts";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,scale] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  // `press-feedback` rather than a plain transition: the press has to land the
+  // instant the finger does. The scale is 95% rather than the 98% this started
+  // with because a 2% change is below the threshold most people notice on a
+  // phone, which made every button feel like it had missed the tap.
+  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap press-feedback active:scale-95 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -55,9 +59,20 @@ export function Button({
   // Slot requires exactly one child element — even a `null` sibling makes the
   // children an array and throws. So asChild takes a separate return that
   // forwards `children` untouched, and never renders the spinner.
+  //
+  // `loading` still has to do something here. It previously did not, which made
+  // `<Button asChild loading={…}><Link/></Button>` structurally incapable of
+  // showing pending state: the caller passed the flag, read the prop list, and
+  // reasonably assumed it worked. With no room for a spinner the state is
+  // carried the way `disabled` already carries it — dimmed and inert — plus
+  // `aria-busy` so it is not a purely visual claim.
   if (asChild) {
     return (
-      <Slot className={classes} {...props}>
+      <Slot
+        className={cn(classes, loading && "pointer-events-none opacity-50")}
+        aria-busy={loading || undefined}
+        {...props}
+      >
         {children}
       </Slot>
     );

@@ -1,6 +1,7 @@
 "use client";
 
 import { ListingDetailView } from "@animalesko/features/listing-detail-view";
+import { DetailScreenSkeleton } from "@animalesko/ui";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
@@ -26,9 +27,15 @@ function PetDetail() {
   return <ListingDetailView id={id} />;
 }
 
+/**
+ * The fallback is the same skeleton `ListingDetailView` renders while its query
+ * is in flight. Opening a pet is the most-taken navigation in the app, and this
+ * boundary resolves a tick before that query even starts — anything else here
+ * is a distinct frame the reader watches get replaced.
+ */
 export default function PetPage() {
   return (
-    <Suspense fallback={<div className="min-h-dvh bg-background" />}>
+    <Suspense fallback={<DetailScreenSkeleton />}>
       <PetDetail />
     </Suspense>
   );

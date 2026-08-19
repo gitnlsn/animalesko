@@ -46,10 +46,18 @@ const config: CapacitorConfig = {
 
   plugins: {
     SplashScreen: {
-      // Long enough to cover the first paint — the app has to resolve a token
-      // from the Keychain and ask the API who it belongs to before it knows
-      // whether to render a signed-in shell.
-      launchShowDuration: 1500,
+      /**
+       * A ceiling, not a duration. `NativeBootstrap` calls `SplashScreen.hide()`
+       * as soon as the shell mounts, so this only decides how long a launch
+       * that has not painted yet is covered.
+       *
+       * It used to be 1500ms, which held every warm start behind a wait that
+       * had nothing to do with the app being ready — and the wait it was
+       * nominally covering (Keychain read, session round trip) happens after
+       * first paint anyway, behind skeletons. 600ms still hides the white frame
+       * before the WebView's first paint on a cold start.
+       */
+      launchShowDuration: 600,
       launchAutoHide: true,
       backgroundColor: "#ffffff",
       showSpinner: false,

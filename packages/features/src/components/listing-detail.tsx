@@ -60,8 +60,9 @@ export function ListingDetail({ listing, siblings }: ListingDetailProps) {
   const [applyOpen, setApplyOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [sharing, setSharing] = useState(false);
 
-  const href = `/pet/${listing.id}`;
+  const href = getPlatform().listingHref(listing.id);
   const isFavorited = favorites.isListingFavorited(listing.id);
   const urgency = URGENCY[listing.urgency];
   const photos =
@@ -72,7 +73,15 @@ export function ListingDetail({ listing, siblings }: ListingDetailProps) {
   const openConversation = useMutation(trpc.message.open.mutationOptions());
   const sendMessage = useMutation(trpc.message.send.mutationOptions());
 
-  const contacting = openConversation.isPending || sendMessage.isPending;
+  /**
+   * Pending for the whole "contact the shelter" sequence, not per mutation.
+   *
+   * `openConversation.isPending || sendMessage.isPending` goes false in the gap
+   * between the two round trips and again while the router navigates, so the
+   * button flickered out of its pending state twice in the middle of an
+   * operation that had not finished.
+   */
+  const [contacting, setContacting] = useState(false);
 
   /**
    * Opens the thread with the shelter, optionally posting a first message.
@@ -87,6 +96,7 @@ export function ListingDetail({ listing, siblings }: ListingDetailProps) {
       return;
     }
 
+    setContacting(true);
     try {
       const { conversationId } = await openConversation.mutateAsync({
         orgId: listing.org.id,
@@ -97,30 +107,47 @@ export function ListingDetail({ listing, siblings }: ListingDetailProps) {
         await sendMessage.mutateAsync({ conversationId, body: firstMessage.trim() });
       }
 
+      // Closed here rather than on the tap. Closing first unmounted the very
+      // button `loading={contacting}` is bound to, so the applicant was dropped
+      // back onto the detail page with no indication that two mutations and a
+      // navigation were still running. Failing now also keeps the dialog — and
+      // the text they typed — instead of discarding both.
+      setApplyOpen(false);
+
+      // Deliberately not cleared on success: the pending state has to survive
+      // until the messages screen replaces this one.
       router.push(`/mensagens?conversa=${conversationId}`);
     } catch (error) {
+      setContacting(false);
       toast.error(error instanceof Error ? error.message : "Não foi possível abrir a conversa.");
     }
   }
 
   async function share() {
     // Via the platform adapter so the native build gets the OS share sheet and
-    // a URL pointing at the website rather than at capacitor://localhost.
+    // a URL pointing at the website rather than at capacitor://localhost. The
+    // path is the site's `/pet/{id}`, not `href` — `href` is the route this
+    // host navigates to internally, and the native one does not exist on the web.
     const platform = getPlatform();
-    const url = platform.publicUrl(href);
+    const url = platform.publicUrl(`/pet/${listing.id}`);
 
-    if (
-      await platform.share({
-        title: `Conheça ${listing.pet.name}!`,
-        text: `🐾 ${listing.summary}\n\nDisponível para adoção na Animalesko 💚`,
-        url,
-      })
-    ) {
-      return;
+    setSharing(true);
+    try {
+      if (
+        await platform.share({
+          title: `Conheça ${listing.pet.name}!`,
+          text: `🐾 ${listing.summary}\n\nDisponível para adoção na Animalesko 💚`,
+          url,
+        })
+      ) {
+        return;
+      }
+
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado! 📋");
+    } finally {
+      setSharing(false);
     }
-
-    await navigator.clipboard.writeText(url);
-    toast.success("Link copiado! 📋");
   }
 
   return (
@@ -136,16 +163,29 @@ export function ListingDetail({ listing, siblings }: ListingDetailProps) {
               size="icon"
               aria-label="Compartilhar"
               className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              loading={sharing}
               onClick={share}
             >
-              <Share2 size={18} />
+              {sharing ? null : <Share2 size={18} />}
             </Button>
+            {/* Indeterminate until `favoritesResolved`: an unfilled heart is an
+                answer, and answering "not favourited" before the ids land means
+                announcing the wrong state and then correcting it. */}
             <Button
               variant="ghost"
               size="icon"
-              aria-label={isFavorited ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-              aria-pressed={isFavorited}
-              className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              aria-label={
+                favorites.favoritesResolved
+                  ? isFavorited
+                    ? "Remover dos favoritos"
+                    : "Adicionar aos favoritos"
+                  : "Favoritar"
+              }
+              aria-pressed={favorites.favoritesResolved ? isFavorited : undefined}
+              className={cn(
+                "text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground",
+                !favorites.favoritesResolved && "opacity-50",
+              )}
               onClick={() => favorites.toggleListing(listing.id, href)}
             >
               <Heart size={18} className={cn(isFavorited && "fill-current")} />
@@ -167,19 +207,22 @@ export function ListingDetail({ listing, siblings }: ListingDetailProps) {
 
           {photos.length > 1 ? (
             <>
+              {/* The tap zones are invisible by design, which left an uncached
+                  photo swapping with no sign the tap registered — so they wash
+                  while pressed. */}
               <button
                 type="button"
                 aria-label="Foto anterior"
                 onClick={() =>
                   setPhotoIndex((index) => (index - 1 + photos.length) % photos.length)
                 }
-                className="absolute inset-y-0 left-0 z-0 w-1/3"
+                className="absolute inset-y-0 left-0 z-0 w-1/3 press-feedback active:bg-black/10"
               />
               <button
                 type="button"
                 aria-label="Próxima foto"
                 onClick={() => setPhotoIndex((index) => (index + 1) % photos.length)}
-                className="absolute inset-y-0 right-0 z-0 w-1/3"
+                className="absolute inset-y-0 right-0 z-0 w-1/3 press-feedback active:bg-black/10"
               />
 
               <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center">
@@ -190,11 +233,13 @@ export function ListingDetail({ listing, siblings }: ListingDetailProps) {
                     aria-label={`Foto ${index + 1}`}
                     aria-current={index === photoIndex}
                     onClick={() => setPhotoIndex(index)}
-                    className="relative flex size-11 items-center justify-center"
+                    className="relative flex size-11 items-center justify-center rounded-full press-feedback active:bg-primary-foreground/20"
                   >
+                    {/* No transition on the dot: it is the answer to the tap,
+                        and a 150ms fade is most of the press. */}
                     <span
                       className={cn(
-                        "size-2 rounded-full transition-colors",
+                        "size-2 rounded-full",
                         index === photoIndex ? "bg-primary-foreground" : "bg-primary-foreground/40",
                       )}
                     />
@@ -335,7 +380,15 @@ export function ListingDetail({ listing, siblings }: ListingDetailProps) {
        * opens a conversation with the shelter carrying the applicant's message
        * — which is what the prototype's dialog pretended to do with a toast.
        */}
-      <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
+      <Dialog
+        open={applyOpen}
+        // Escape and the overlay are dismissals too, and dismissing mid-send
+        // would hide the pending state the same way closing on tap did.
+        // `contactShelter` closes it directly, so this never blocks success.
+        onOpenChange={(next) => {
+          if (!contacting) setApplyOpen(next);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Adotar {listing.pet.name}</DialogTitle>
@@ -352,16 +405,10 @@ export function ListingDetail({ listing, siblings }: ListingDetailProps) {
           />
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setApplyOpen(false)}>
+            <Button variant="outline" disabled={contacting} onClick={() => setApplyOpen(false)}>
               Cancelar
             </Button>
-            <Button
-              loading={contacting}
-              onClick={() => {
-                setApplyOpen(false);
-                void contactShelter(message);
-              }}
-            >
+            <Button loading={contacting} onClick={() => void contactShelter(message)}>
               Enviar
             </Button>
           </DialogFooter>

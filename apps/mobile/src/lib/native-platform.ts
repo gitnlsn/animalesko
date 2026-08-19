@@ -64,4 +64,13 @@ export const nativePlatform: PlatformAdapter = {
   publicUrl(path) {
     return `${WEB_URL}${path}`;
   },
+
+  /**
+   * The query-parameter form the static export actually prerenders. Deep links
+   * arriving as `/pet/{id}` are rewritten to this by `native-bootstrap.tsx`;
+   * this is the same mapping for links originating inside the app.
+   */
+  listingHref(id) {
+    return `/pet?id=${encodeURIComponent(id)}`;
+  },
 };

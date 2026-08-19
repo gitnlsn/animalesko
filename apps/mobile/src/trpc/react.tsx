@@ -16,6 +16,7 @@ import { PushRegistration } from "~/components/push-registration.tsx";
 import { API_URL } from "~/lib/api-url.ts";
 import { authClient } from "~/lib/auth-client.ts";
 import { tokenStore } from "~/lib/token-store.ts";
+import { persistQueryCache, restoreQueryCache } from "./persist.ts";
 import { createQueryClient } from "./query-client.ts";
 
 export { useTRPC, useTRPCClient } from "@animalesko/features";
@@ -27,7 +28,19 @@ function getQueryClient(): QueryClient {
   // server branch is about the build, not a request — but it must stay, or the
   // build shares one cache across every prerendered route.
   if (typeof window === "undefined") return createQueryClient();
-  return (clientQueryClient ??= createQueryClient());
+
+  if (!clientQueryClient) {
+    clientQueryClient = createQueryClient();
+
+    // Restored before anything is able to read the client, so the first render
+    // already contains last launch's data. Doing it in an effect instead would
+    // mean every screen painted its placeholder once and replaced it a frame
+    // later, which is the flicker this is meant to remove.
+    restoreQueryCache(clientQueryClient);
+    persistQueryCache(clientQueryClient);
+  }
+
+  return clientQueryClient;
 }
 
 /**
@@ -112,6 +125,8 @@ function NativeSession({ children }: { children: React.ReactNode }) {
         signedIn: Boolean(session.data?.user),
         userId: session.data?.user.id ?? null,
         name: session.data?.user.name ?? null,
+        // The one host where "signed in?" has a third answer. See ClientSession.
+        resolving: session.isPending,
       }}
     >
       {children}

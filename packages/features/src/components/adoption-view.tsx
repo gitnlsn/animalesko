@@ -1,7 +1,7 @@
 "use client";
 
 import { listingSearchParamsSchema } from "@animalesko/api/schemas";
-import { Card, Skeleton } from "@animalesko/ui";
+import { Card, PetCardSkeleton } from "@animalesko/ui";
 import { useQuery } from "@tanstack/react-query";
 import { PawPrint } from "lucide-react";
 import { useSearchParams } from "next/navigation";
@@ -56,10 +56,13 @@ export function AdoptionView() {
       <FilterBar />
 
       {listings.isPending || rendering ? (
+        // `PetCardSkeleton` rather than a flat block: it carries the card's own
+        // photo/detail split, so the arriving cards fill the space they are
+        // already occupying instead of replacing a differently shaped one.
         <div className="space-y-4">
-          <Skeleton className="h-72 w-full rounded-2xl" />
-          <Skeleton className="h-72 w-full rounded-2xl" />
-          <Skeleton className="h-72 w-full rounded-2xl" />
+          <PetCardSkeleton />
+          <PetCardSkeleton />
+          <PetCardSkeleton />
         </div>
       ) : (listings.data?.length ?? 0) === 0 ? (
         <Card className="flex flex-col items-center gap-3 p-12 text-center">

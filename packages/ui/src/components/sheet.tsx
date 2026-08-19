@@ -20,7 +20,10 @@ export const SheetClose = SheetPrimitive.Close;
 const sheetVariants = cva(
   cn(
     "fixed z-50 flex flex-col gap-4 bg-background p-6 shadow-brand-lg",
-    "data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=open]:animate-in data-[state=open]:duration-300",
+    // Opening matches the 200ms close rather than easing in over 300ms: a
+    // filter sheet that takes a third of a second to arrive reads as a wait,
+    // and the panel is what the tap was asking for.
+    "data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=open]:animate-in data-[state=open]:duration-200",
   ),
   {
     variants: {
@@ -54,7 +57,7 @@ export function SheetContent({ className, children, side, ...props }: SheetConte
         {...props}
       >
         {children}
-        <SheetPrimitive.Close className="absolute top-4 right-4 rounded-md p-1 transition-colors hover:bg-muted">
+        <SheetPrimitive.Close className="absolute top-4 right-4 rounded-md p-1 press-feedback hover:bg-muted active:bg-muted">
           <X className="size-4" />
           <span className="sr-only">Fechar</span>
         </SheetPrimitive.Close>

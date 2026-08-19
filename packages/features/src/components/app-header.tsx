@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 
 import { NotificationDropdown } from "./notification-dropdown.tsx";
 import { TABS, isActiveTab } from "./bottom-nav.tsx";
+import { useSession } from "../lib/session-context.tsx";
 
 /**
  * The gradient bar at the top of every tab.
@@ -12,8 +13,21 @@ import { TABS, isActiveTab } from "./bottom-nav.tsx";
  * one giant ternary. With the tabs as routes it can be read from the pathname,
  * which keeps the title correct on a hard refresh or a shared link.
  */
-export function AppHeader({ signedIn }: { signedIn: boolean }) {
+export function AppHeader({
+  signedIn,
+  /**
+   * Whether the session is still being worked out, which only happens in the
+   * native shell. Optional, and it falls back to the session in context, so the
+   * two web layouts that pass a server-resolved `signedIn` need no change and
+   * the native shell gets the right answer whether or not it threads the prop.
+   */
+  resolving,
+}: {
+  signedIn: boolean;
+  resolving?: boolean;
+}) {
   const pathname = usePathname();
+  const session = useSession();
   const title = TABS.find((tab) => isActiveTab(pathname, tab.href))?.label ?? "Animalesko";
 
   return (
@@ -29,7 +43,7 @@ export function AppHeader({ signedIn }: { signedIn: boolean }) {
           <p className="text-xs text-gradient-foreground/80">Animalesko</p>
         </div>
 
-        <NotificationDropdown signedIn={signedIn} />
+        <NotificationDropdown signedIn={signedIn} resolving={resolving ?? session.resolving} />
       </div>
     </header>
   );

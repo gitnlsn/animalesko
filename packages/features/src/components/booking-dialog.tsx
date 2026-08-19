@@ -23,6 +23,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Skeleton,
   Textarea,
   toast,
 } from "@animalesko/ui";
@@ -80,6 +81,49 @@ interface BookingDialogProps {
 function atTime(day: Date, time: string): Date {
   const [hours, minutes] = time.split(":").map(Number);
   return brazilWallClock(day, hours ?? 0, minutes ?? 0);
+}
+
+/**
+ * The booking form's own geometry, so the dialog opens at the height it will
+ * settle at — the calendar is most of it, and a short placeholder would grow
+ * the sheet under the reader's thumb the moment the pets arrive.
+ */
+function BookingFormSkeleton({ isRange }: { isRange: boolean }) {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+      </div>
+
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-16" />
+        {/* One react-day-picker month: caption, weekday row and up to six weeks
+            of 36px cells, inside the p-3 the Calendar sets. */}
+        <Skeleton className="h-[19.5rem] w-full rounded-lg" />
+      </div>
+
+      {!isRange ? (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-16 w-full rounded-lg" />
+      </div>
+
+      <Skeleton className="h-11 w-full rounded-lg" />
+    </div>
+  );
 }
 
 export function BookingDialog({ offering, onOpenChange }: BookingDialogProps) {
@@ -180,6 +224,12 @@ export function BookingDialog({ offering, onOpenChange }: BookingDialogProps) {
               <Link href="/entrar?next=/servicos">Entrar</Link>
             </Button>
           </div>
+        ) : pets.isPending ? (
+          // Guarded before the empty branch, because `petItems.length === 0` is
+          // also true while the list is in flight — and this dialog *opens* into
+          // that branch, so someone with three pets was told to cadastrar one
+          // and handed a link away from the booking they had just started.
+          <BookingFormSkeleton isRange={isRange} />
         ) : petItems.length === 0 ? (
           <div className="space-y-4 py-4 text-center">
             <PawPrint className="mx-auto size-10 text-muted-foreground" />
@@ -308,7 +358,10 @@ export function BookingDialog({ offering, onOpenChange }: BookingDialogProps) {
           </div>
         )}
 
-        {signedIn && petItems.length > 0 ? (
+        {/* Kept up while the pets load so the footer does not appear from
+            nowhere and shove the form; "Confirmar" is disabled until there is
+            something to confirm anyway. */}
+        {signedIn && (pets.isPending || petItems.length > 0) ? (
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar

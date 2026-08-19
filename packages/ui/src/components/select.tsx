@@ -19,6 +19,10 @@ export function SelectTrigger({
     <SelectPrimitive.Trigger
       className={cn(
         "flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm",
+        // The portal takes a frame or two to mount, so without a pressed state
+        // and an open marker the trigger looks inert for the whole gap.
+        "press-feedback active:bg-muted",
+        "data-[state=open]:border-primary data-[state=open]:ring-2 data-[state=open]:ring-primary/20",
         "disabled:cursor-not-allowed disabled:opacity-50 data-[placeholder]:text-muted-foreground",
         "aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/30",
         className,
@@ -72,7 +76,9 @@ export function SelectItem({
     <SelectPrimitive.Item
       className={cn(
         "relative flex w-full cursor-default items-center rounded-md py-1.5 pr-8 pl-2 text-sm outline-none select-none",
-        "focus:bg-muted data-disabled:pointer-events-none data-disabled:opacity-50",
+        // `focus:` is keyboard/pointer-move driven; a finger never produces it.
+        "press-feedback focus:bg-muted active:bg-muted",
+        "data-disabled:pointer-events-none data-disabled:opacity-50",
         className,
       )}
       {...props}

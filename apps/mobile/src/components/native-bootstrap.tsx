@@ -2,7 +2,7 @@
 
 import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
-import { setPlatform } from "@animalesko/features/platform";
+import { setPlatform, webPlatform } from "@animalesko/features/platform";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { Style, StatusBar } from "@capacitor/status-bar";
@@ -23,10 +23,26 @@ const NATIVE_SCHEMES = ["https:", "capacitor:"];
  * component can call `getPlatform()` during its first render, which happens
  * before any effect runs, and getting the browser implementation that once
  * would mean silently asking for location through the wrong API.
+ *
+ * `listingHref` is the exception that has to be decided differently, because it
+ * is a property of *this build* rather than of the device running it. Geolocation
+ * and the share sheet genuinely depend on whether Capacitor is there; the route
+ * shape does not — apps/mobile is the static export whether it is opened in the
+ * WebView or in a desktop browser through `next dev`, and `/pet/[id]` is absent
+ * from its exported tree either way.
+ *
+ * Deciding it from `isNativePlatform()` would also break hydration. These pages
+ * are prerendered in Node at build time, where Capacitor reports false, so every
+ * listing link would be written into the HTML as `/pet/{id}` and then hydrate as
+ * `/pet?id={id}`. React repairs the attribute and complains, but the real cost is
+ * the window before hydration finishes: a tap in it follows the href that is
+ * actually in the document, which is the full-page load this was meant to remove.
  */
-if (Capacitor.isNativePlatform()) {
-  setPlatform(nativePlatform);
-}
+setPlatform(
+  Capacitor.isNativePlatform()
+    ? nativePlatform
+    : { ...webPlatform, listingHref: nativePlatform.listingHref },
+);
 
 /**
  * Renders nothing. Wires the native shell: status bar, keyboard behaviour,

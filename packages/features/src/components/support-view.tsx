@@ -20,7 +20,7 @@ import {
 } from "@animalesko/ui";
 import { HelpCircle, Mail, MessageCircle, Send } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const FAQ = [
   {
@@ -214,20 +214,41 @@ function Chatbot() {
 }
 
 function ContactCard() {
+  const [openingInbox, setOpeningInbox] = useState(false);
+  const [openingMail, setOpeningMail] = useState(false);
+
+  // `mailto:` hands the tap to the mail app and leaves this screen exactly as
+  // it was, so nothing here would ever clear the flag. This window losing focus
+  // *is* the handoff landing; the timeout covers a device with no mail client,
+  // where it never will.
+  useEffect(() => {
+    if (!openingMail) return;
+
+    const clear = () => setOpeningMail(false);
+    const timer = setTimeout(clear, 4_000);
+    window.addEventListener("blur", clear);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("blur", clear);
+    };
+  }, [openingMail]);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Ainda precisa de ajuda?</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Button asChild className="w-full">
-          <Link href="/mensagens">
+        {/* The route transition unmounts this card, so this flag clears itself. */}
+        <Button asChild className="w-full" loading={openingInbox}>
+          <Link href="/mensagens" onClick={() => setOpeningInbox(true)}>
             <MessageCircle size={16} />
             Falar com a gente
           </Link>
         </Button>
-        <Button asChild variant="outline" className="w-full">
-          <a href="mailto:suporte@animalesko.com.br">
+        <Button asChild variant="outline" className="w-full" loading={openingMail}>
+          <a href="mailto:suporte@animalesko.com.br" onClick={() => setOpeningMail(true)}>
             <Mail size={16} />
             suporte@animalesko.com.br
           </a>

@@ -50,16 +50,27 @@ export function ServiceCard({ offering, onBook }: ServiceCardProps) {
           <span className="text-sm font-medium text-foreground">
             {formatPrice(offering.priceCents, offering.priceUnit)}
           </span>
+          {/* The toggle is optimistic, so the fill lands with the tap; a 300ms
+              `transition-smooth` used to smear it out of existence. And until
+              `favoritesResolved` the answer is unknown, so the heart is dimmed
+              and drops `aria-pressed` rather than claiming "not favourited". */}
           <button
             type="button"
-            aria-label={isFavorited ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-            aria-pressed={isFavorited}
+            aria-label={
+              favorites.favoritesResolved
+                ? isFavorited
+                  ? "Remover dos favoritos"
+                  : "Adicionar aos favoritos"
+                : "Favoritar"
+            }
+            aria-pressed={favorites.favoritesResolved ? isFavorited : undefined}
             onClick={() => favorites.toggleOffering(offering.id, "/servicos")}
             className={cn(
-              "rounded-full p-1.5 transition-smooth",
+              "rounded-full p-1.5 press-feedback active:scale-90",
               isFavorited
                 ? "bg-secondary text-secondary-foreground"
-                : "text-muted-foreground hover:text-secondary",
+                : "text-muted-foreground hover:text-secondary active:text-secondary",
+              !favorites.favoritesResolved && "opacity-50",
             )}
           >
             <Heart size={14} className={cn(isFavorited && "fill-current")} />

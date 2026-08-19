@@ -20,7 +20,10 @@ export function RadioGroupItem({
   return (
     <RadioGroupPrimitive.Item
       className={cn(
-        "aspect-square size-4 shrink-0 rounded-full border border-input transition-colors",
+        "aspect-square size-4 shrink-0 rounded-full border border-input press-feedback",
+        // A halo, matching Checkbox: at 16px there is no room for a fill that
+        // would not collide with the checked indicator.
+        "active:border-primary active:ring-4 active:ring-primary/20",
         "disabled:cursor-not-allowed disabled:opacity-50",
         "data-[state=checked]:border-primary",
         className,

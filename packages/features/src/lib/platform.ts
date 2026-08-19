@@ -37,6 +37,18 @@ export interface PlatformAdapter {
 
   /** Absolute origin for links that leave the app. */
   publicUrl(path: string): string;
+
+  /**
+   * In-app route to a listing, which is not the same string on both hosts.
+   *
+   * The web apps serve `/pet/[id]`. The native bundle cannot: a static export
+   * has to know every dynamic segment at build time, so that screen ships as
+   * `/pet?id=…` instead. A component that hardcodes `/pet/${id}` therefore
+   * points at a route that is not in the exported tree, and the WebView falls
+   * back to a full document load — the slowest navigation the app can perform,
+   * on the single most common tap in it.
+   */
+  listingHref(id: string): string;
 }
 
 /**
@@ -81,6 +93,10 @@ export const webPlatform: PlatformAdapter = {
 
   publicUrl(path) {
     return `${globalThis.location?.origin ?? ""}${path}`;
+  },
+
+  listingHref(id) {
+    return `/pet/${id}`;
   },
 };
 

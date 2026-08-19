@@ -27,12 +27,19 @@ export function ThemeToggle() {
 
   const isDark = resolvedTheme === "dark";
 
+  /*
+   * No `transition-smooth` on the class list: it lands after `Button`'s own and
+   * stretched the press back to 300ms, which on a touch device is the whole tap.
+   * The hover grow stays for the two desktop hosts — animated by the button's
+   * `press-feedback` now — and a finger gets the instant `active:scale-95` the
+   * button already carries.
+   */
   return (
     <Button
       variant="outline"
       size="icon"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="transition-smooth hover:scale-105"
+      className="hover:scale-105"
     >
       {isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
       <span className="sr-only">{isDark ? "Modo claro" : "Modo escuro"}</span>

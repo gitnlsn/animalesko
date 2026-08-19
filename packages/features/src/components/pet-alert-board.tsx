@@ -27,6 +27,7 @@ import {
   FormLabel,
   FormMessage,
   Input,
+  ListSkeleton,
   Select,
   SelectContent,
   SelectItem,
@@ -37,7 +38,7 @@ import {
   toast,
 } from "@animalesko/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Eye, MapPin, Phone, Plus, Siren } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -69,6 +70,16 @@ export function PetAlertBoard() {
   const { signedIn } = useSession();
 
   const [center, setCenter] = useState<[number, number]>(FALLBACK_CENTER);
+  /**
+   * Whether geolocation has given its answer — including "no".
+   *
+   * `near` is part of the query key, so firing before this settled fetched São
+   * Paulo's alerts, rendered them, and then swapped the entire list the moment
+   * the real position arrived. Holding the query costs nothing the user can
+   * see: the same skeleton covers the permission prompt and the request after
+   * it, instead of two lists and a false "Nenhum alerta por perto" between them.
+   */
+  const [locationSettled, setLocationSettled] = useState(false);
   const [species, setSpecies] = useState<Species | "all">("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [selected, setSelected] = useState<AlertDTO | null>(null);
@@ -86,8 +97,15 @@ export function PetAlertBoard() {
     void getPlatform()
       .getCurrentPosition()
       .then((position) => {
-        if (cancelled || !position) return;
-        setCenter([position.latitude, position.longitude]);
+        if (cancelled) return;
+        if (position) setCenter([position.latitude, position.longitude]);
+        setLocationSettled(true);
+      })
+      // The adapter promises not to throw, but the whole board now waits on
+      // this promise: a rejection that went unhandled would leave the screen in
+      // its skeleton for good.
+      .catch(() => {
+        if (!cancelled) setLocationSettled(true);
       });
 
     return () => {
@@ -95,13 +113,18 @@ export function PetAlertBoard() {
     };
   }, []);
 
-  const alerts = useQuery(
-    trpc.alert.list.queryOptions({
+  const alerts = useQuery({
+    ...trpc.alert.list.queryOptions({
       ...(species === "all" ? {} : { species }),
       near: { latitude: center[0], longitude: center[1], radiusKm: 100 },
       limit: 100,
     }),
-  );
+    enabled: locationSettled,
+    // The species filter is in the key as well, so without this every change of
+    // filter fell back through "no data" and flashed the empty state on the way
+    // to the answer.
+    placeholderData: keepPreviousData,
+  });
 
   const items = alerts.data ?? [];
 
@@ -145,15 +168,40 @@ export function PetAlertBoard() {
           <AlertMap alerts={items} center={center} onSelect={setSelected} />
         </div>
 
+        {/* The count and the "boa notícia" card are claims about the region, so
+            neither may be rendered before the region has answered. Both used to
+            be: the screen opened on "Nenhum alerta por perto" every time. */}
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
             <Siren size={18} className="text-destructive" />
-            {items.length === 0
-              ? "Nenhum alerta por perto"
-              : `${items.length} ${items.length === 1 ? "alerta" : "alertas"} por perto`}
+            {alerts.isPending ? (
+              <Skeleton className="h-5 w-44" />
+            ) : alerts.isError ? (
+              "Alertas por perto"
+            ) : items.length === 0 ? (
+              "Nenhum alerta por perto"
+            ) : (
+              `${items.length} ${items.length === 1 ? "alerta" : "alertas"} por perto`
+            )}
           </h2>
 
-          {items.length === 0 ? (
+          {alerts.isPending ? (
+            <ListSkeleton count={3} />
+          ) : alerts.isError ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-muted-foreground">
+                <p>Não foi possível carregar os alertas desta região.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  loading={alerts.isFetching}
+                  onClick={() => void alerts.refetch()}
+                >
+                  Tentar de novo
+                </Button>
+              </CardContent>
+            </Card>
+          ) : items.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center text-sm text-muted-foreground">
                 Boa notícia — nenhum pet perdido registrado nesta região. Se você perdeu o seu,
@@ -183,23 +231,33 @@ export function PetAlertBoard() {
 
 function AlertCard({ alert, onSelect }: { alert: AlertDTO; onSelect: (alert: AlertDTO) => void }) {
   return (
-    <Card className="cursor-pointer transition-shadow hover:shadow-brand-md">
-      <CardContent className="space-y-2 p-4" onClick={() => onSelect(alert)}>
+    // The whole card is one control, so it is one `button`. The click used to
+    // sit on the CardContent inside a `cursor-pointer` Card: nothing focusable,
+    // nothing a keyboard could reach, and the Card's own padding was a dead
+    // strip that swallowed taps aimed at the edge of what looks tappable.
+    <Card className="overflow-hidden transition-shadow hover:shadow-brand-md">
+      <button
+        type="button"
+        onClick={() => onSelect(alert)}
+        className="w-full space-y-2 p-4 text-left press-feedback active:bg-muted/60"
+      >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="truncate text-lg font-bold">
+            <span className="block truncate text-lg font-bold">
               {SPECIES_EMOJI[alert.species]} {alert.name}
-            </h3>
-            <p className="truncate text-sm text-muted-foreground">
+            </span>
+            <span className="block truncate text-sm text-muted-foreground">
               {alert.breed ?? SPECIES_LABELS[alert.species]}
-            </p>
+            </span>
           </div>
           <Badge variant={alert.status === "LOST" ? "destructive" : "success"} className="shrink-0">
             {formatAlertStatus(alert.status)}
           </Badge>
         </div>
 
-        <p className="line-clamp-2 text-sm text-muted-foreground">{alert.description}</p>
+        <span className="line-clamp-2 block text-sm text-muted-foreground">
+          {alert.description}
+        </span>
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
@@ -214,7 +272,7 @@ function AlertCard({ alert, onSelect }: { alert: AlertDTO; onSelect: (alert: Ale
             </span>
           ) : null}
         </div>
-      </CardContent>
+      </button>
     </Card>
   );
 }
@@ -285,7 +343,12 @@ function AlertDetailsDialog({
               <p className="font-medium">Contato</p>
               <p className="flex items-center gap-2 text-muted-foreground">
                 <Phone size={14} />
-                <a href={`tel:${alert.contactPhone}`} className="underline">
+                {/* Hands off to the dialler, so the tap has to be acknowledged
+                    here — nothing on this screen changes when it lands. */}
+                <a
+                  href={`tel:${alert.contactPhone}`}
+                  className="underline press-feedback active:opacity-60"
+                >
                   {alert.contactPhone}
                 </a>{" "}
                 — {alert.contactName}

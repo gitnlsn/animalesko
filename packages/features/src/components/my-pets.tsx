@@ -17,10 +17,11 @@ import {
   CardHeader,
   CardTitle,
   ListSkeleton,
+  Skeleton,
   toast,
 } from "@animalesko/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Crown, PawPrint, Pencil, Plus, Trash2 } from "lucide-react";
+import { Crown, Loader2, PawPrint, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { PetForm } from "./pet-form.tsx";
@@ -67,7 +68,11 @@ export function MyPets() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">Gerencie todos os seus companheiros</p>
-        <Button onClick={() => setEditing("new")} disabled={atLimit}>
+        {/* Disabled until the quota is known, not just when it is known to be
+            spent: `remaining === 0` is false while the query is in flight, so
+            someone already at their limit was offered a form the server was
+            always going to reject. */}
+        <Button onClick={() => setEditing("new")} disabled={atLimit || quotaQuery.isPending}>
           <Plus size={16} />
           Adicionar
         </Button>
@@ -75,8 +80,29 @@ export function MyPets() {
 
       {/* The plan gate the prototype rendered as static copy ("você pode
           cadastrar até 1 pet") while accepting unlimited pets. These numbers
-          come from the server, which also enforces them. */}
-      {quota ? (
+          come from the server, which also enforces them.
+
+          The placeholder is not decoration: this card sits above the list, so
+          rendering nothing while it loaded pushed every pet down the moment the
+          quota landed.
+
+          There is no upgrade control here on purpose. The one that used to sit
+          in this card carried no `onClick` at all, and there is nothing to give
+          it: no checkout route in any host, and nothing behind
+          `Subscription.gatewayRef`. Plus is the provider back office, not a
+          tutor's plan, so pointing it there would only be a wrong destination
+          instead of no destination. */}
+      {quotaQuery.isPending ? (
+        <Card className="border-secondary/40 bg-gradient-to-r from-warning/10 to-secondary/10">
+          <CardContent className="flex items-center gap-3 p-4">
+            <Skeleton className="size-6 shrink-0 rounded-full" />
+            <div className="space-y-1.5">
+              <Skeleton className="h-5 w-28" />
+              <Skeleton className="h-4 w-44" />
+            </div>
+          </CardContent>
+        </Card>
+      ) : quota ? (
         <Card className="border-secondary/40 bg-gradient-to-r from-warning/10 to-secondary/10">
           <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
             <div className="flex items-center gap-3">
@@ -92,11 +118,6 @@ export function MyPets() {
                 </p>
               </div>
             </div>
-            {quota.tier === "FREE" ? (
-              <Button variant="secondary" size="sm">
-                Upgrade para Premium
-              </Button>
-            ) : null}
           </CardContent>
         </Card>
       ) : null}
@@ -201,14 +222,20 @@ export function MyPets() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            {/* `preventDefault` keeps the dialog open until the server answers,
+                which without a pending state left a live "Remover" sitting
+                under the finger: a second tap fired a second delete. */}
             <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 active:bg-destructive/80"
+              disabled={deletePet.isPending}
+              aria-busy={deletePet.isPending || undefined}
               onClick={(event) => {
                 event.preventDefault();
                 if (pendingDelete) deletePet.mutate({ id: pendingDelete.id });
               }}
             >
-              Remover
+              {deletePet.isPending ? <Loader2 className="animate-spin" aria-hidden /> : null}
+              {deletePet.isPending ? "Removendo…" : "Remover"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

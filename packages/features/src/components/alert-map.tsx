@@ -68,9 +68,12 @@ export function AlertMap({ alerts, center, onSelect }: AlertMapProps) {
             <div className="min-w-44 p-2">
               <p className="font-semibold">{alert.name}</p>
               <p className="text-xs text-muted-foreground">{alert.lastSeenAddress}</p>
+              {/* The one control in the popup, and it opens a sheet that has to
+                  render before anything moves — so without a pressed state the
+                  tap reads as having missed the (small) link entirely. */}
               <button
                 type="button"
-                className="mt-2 text-xs font-medium text-primary underline"
+                className="-mx-1 mt-2 rounded px-1 py-1 text-xs font-medium text-primary underline press-feedback active:bg-primary/10 active:text-primary-dark"
                 onClick={() => onSelect(alert)}
               >
                 Ver detalhes

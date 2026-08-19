@@ -14,11 +14,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  DetailSkeleton,
   Label,
   RadioGroup,
   RadioGroupItem,
   Separator,
+  Skeleton,
   cn,
   toast,
 } from "@animalesko/ui";
@@ -62,6 +62,7 @@ export function PaymentView() {
   const bookingId = searchParams.get("agendamento");
 
   const [method, setMethod] = useState<PaymentMethod>("PIX");
+  const [leaving, setLeaving] = useState(false);
 
   const booking = useQuery({
     ...trpc.booking.byId.queryOptions({ id: bookingId ?? "" }),
@@ -99,8 +100,14 @@ export function PaymentView() {
           <p className="text-sm text-muted-foreground">
             Abra o pagamento a partir de um agendamento no seu histórico.
           </p>
-          <Button asChild className="mt-2">
-            <Link href="/historico">Ver histórico</Link>
+          {/* `loading` on an `asChild` Button dims and marks it busy: the
+              press itself lands instantly, but /historico is another route
+              with its own query, so without this the tap reads as ignored
+              for the length of that transition. */}
+          <Button asChild className="mt-2" loading={leaving}>
+            <Link href="/historico" onClick={() => setLeaving(true)}>
+              Ver histórico
+            </Link>
           </Button>
         </CardContent>
       </Card>
@@ -108,7 +115,7 @@ export function PaymentView() {
   }
 
   if (booking.isPending) {
-    return <DetailSkeleton />;
+    return <PaymentSkeleton />;
   }
 
   if (booking.isError || !booking.data) {
@@ -179,9 +186,14 @@ export function PaymentView() {
                   <Label
                     key={option}
                     htmlFor={`method-${option}`}
+                    // The whole card is the tap target, so the whole card has
+                    // to answer the finger — `hover:bg-muted/50` alone is
+                    // nothing at all on a phone.
                     className={cn(
-                      "flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-colors",
-                      method === option ? "border-primary bg-primary/5" : "hover:bg-muted/50",
+                      "flex cursor-pointer items-center gap-3 rounded-xl border p-4 press-feedback active:scale-[0.99]",
+                      method === option
+                        ? "border-primary bg-primary/5 active:bg-primary/10"
+                        : "hover:bg-muted/50 active:bg-muted",
                     )}
                   >
                     <RadioGroupItem value={option} id={`method-${option}`} />
@@ -210,6 +222,56 @@ export function PaymentView() {
           </p>
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * Shaped like the state this screen actually loads into: the booking card, the
+ * four payment-method cards, the button and the disclaimer.
+ *
+ * `DetailSkeleton` stood here and reserved roughly a third of that, so the page
+ * grew by two screenfuls the moment the booking landed — a placeholder of the
+ * wrong height buys a layout jump rather than preventing one.
+ */
+function PaymentSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-4 w-1/2" />
+        </CardHeader>
+
+        <CardContent className="space-y-2">
+          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-5 w-5/6" />
+          <Separator className="my-3" />
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-5 w-16" />
+            <Skeleton className="h-8 w-28" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <section>
+        <Skeleton className="mb-3 h-7 w-48" />
+        <div className="flex flex-col gap-3">
+          {paymentMethodSchema.options.map((option) => (
+            <div key={option} className="flex items-center gap-3 rounded-xl border p-4">
+              <Skeleton className="size-4 shrink-0 rounded-full" />
+              <Skeleton className="size-5 shrink-0 rounded" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <Skeleton className="h-12 w-full rounded-lg" />
+      <Skeleton className="mx-auto h-4 w-64" />
     </div>
   );
 }

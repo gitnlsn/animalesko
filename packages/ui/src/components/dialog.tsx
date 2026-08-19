@@ -44,7 +44,7 @@ export function DialogContent({
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute top-4 right-4 rounded-md p-1 ring-offset-background transition-colors hover:bg-muted">
+        <DialogPrimitive.Close className="absolute top-4 right-4 rounded-md p-1 ring-offset-background press-feedback hover:bg-muted active:bg-muted">
           <X className="size-4" />
           <span className="sr-only">Fechar</span>
         </DialogPrimitive.Close>
