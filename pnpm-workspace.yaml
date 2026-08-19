@@ -14,7 +14,7 @@ allowBuilds:
 
 # Keep the toolchain identical across every workspace package.
 catalog:
-  typescript: 5.9.3
+  typescript: 6.0.3
   "@types/node": ^24.10.1
   react: 19.2.8
   react-dom: 19.2.8
