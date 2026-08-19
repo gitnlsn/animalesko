@@ -63,12 +63,20 @@ export function Calendar({
           "[&:has([aria-selected])]:bg-primary-light first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
         ),
         day_button: dayCell,
-        selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary",
+        // The hover overrides exist to stop the ghost day button repainting a
+        // painted cell; `active:` needs the same treatment, or pressing a
+        // selected day turns it muted grey on the way to reselecting it.
+        selected: cn(
+          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+          "active:bg-primary active:text-primary-foreground",
+          "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:active:bg-primary",
+        ),
         range_start: "rounded-l-md",
         range_end: "rounded-r-md",
-        range_middle:
-          "bg-primary-light [&>button]:bg-transparent [&>button]:text-foreground [&>button]:hover:bg-primary/20",
+        range_middle: cn(
+          "bg-primary-light [&>button]:bg-transparent [&>button]:text-foreground",
+          "[&>button]:hover:bg-primary/20 [&>button]:active:bg-primary/20",
+        ),
         today: "font-semibold text-primary",
         outside: "text-muted-foreground/50",
         disabled: "text-muted-foreground/40 line-through",

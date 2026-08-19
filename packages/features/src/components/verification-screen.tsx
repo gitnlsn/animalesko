@@ -11,6 +11,7 @@ import {
 } from "@animalesko/ui";
 import { BadgeCheck, ExternalLink, FileText, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { PageHeader } from "./page-header.tsx";
 
@@ -44,6 +45,25 @@ export function VerificationScreen({
   isProvider: boolean;
   plusUrl: string;
 }) {
+  const [openingPlus, setOpeningPlus] = useState(false);
+
+  // Opening Plus hands off to another app and leaves this screen mounted, so
+  // nothing here would ever clear the flag on its own. This window losing focus
+  // *is* the handoff landing; the timeout covers the case where it never does,
+  // so a blocked popup cannot leave the control permanently inert.
+  useEffect(() => {
+    if (!openingPlus) return;
+
+    const clear = () => setOpeningPlus(false);
+    const timer = setTimeout(clear, 4_000);
+    window.addEventListener("blur", clear);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("blur", clear);
+    };
+  }, [openingPlus]);
+
   return (
     <>
       <PageHeader
@@ -108,9 +128,16 @@ export function VerificationScreen({
 
           <CardContent>
             {/* Plus is a separate deployment, and on the device it is not part of
-                the bundle at all — so this leaves the app either way. */}
-            <Button asChild className="w-full">
-              <a href={plusUrl} target="_blank" rel="noreferrer">
+                the bundle at all — so this leaves the app either way, which is
+                exactly why it needs a pending state: nothing on this screen
+                changes while the browser is coming up. */}
+            <Button asChild className="w-full" loading={openingPlus}>
+              <a
+                href={plusUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setOpeningPlus(true)}
+              >
                 <ExternalLink size={16} />
                 {isProvider ? "Abrir o Animalesko Plus" : "Conhecer o Animalesko Plus"}
               </a>
@@ -120,7 +147,7 @@ export function VerificationScreen({
 
         <p className="text-center text-xs text-muted-foreground">
           Dúvidas sobre verificação?{" "}
-          <Link href="/suporte" className="underline">
+          <Link href="/suporte" className="underline press-feedback active:opacity-60">
             Fale com o suporte
           </Link>
           .

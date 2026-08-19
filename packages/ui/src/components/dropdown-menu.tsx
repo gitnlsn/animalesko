@@ -35,7 +35,9 @@ export function DropdownMenuContent({
 
 const itemClasses = cn(
   "relative flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none select-none",
-  "transition-colors focus:bg-muted data-disabled:pointer-events-none data-disabled:opacity-50",
+  // `focus:` only lands on an item once the pointer moves over it, which never
+  // happens on touch — the tap is the first and last event the item sees.
+  "press-feedback focus:bg-muted active:bg-muted data-disabled:pointer-events-none data-disabled:opacity-50",
   "[&_svg]:size-4 [&_svg]:shrink-0",
 );
 

@@ -24,7 +24,12 @@ export const SERVICES_PAGE_LIMIT = 50;
 
 /**
  * Histórico — the "Todos" tab. The view passes `status: undefined` there, which
- * hashes to the same key as omitting it; the other three tabs fetch on demand.
+ * hashes to the same key as omitting it.
+ *
+ * The other three tabs no longer wait to be opened: their content is force-mounted
+ * so Radix cannot unmount it, which costs three extra requests when the screen
+ * opens and buys a tab bar where every tap is instant instead of one that
+ * re-enters a skeleton on each switch.
  */
 export const HISTORY_BOOKINGS_LIMIT = 100;
 

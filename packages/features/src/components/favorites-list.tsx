@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { petImage } from "../lib/display.ts";
+import { getPlatform } from "../lib/platform.ts";
 import { useFavorites } from "../lib/use-favorites.ts";
 import { useTRPC } from "../trpc.ts";
 
@@ -56,11 +57,17 @@ export function FavoritesList() {
             Pets ({pets.length})
           </h2>
 
+          {/* Through the adapter, not `/pet/${id}`: that path is not in the
+              native static export, so hardcoding it turned the most common tap
+              on this screen into a full WebView document load. */}
           <div className="space-y-3">
             {pets.map((listing) => (
               <Card key={listing.id} className="overflow-hidden p-0">
                 <CardContent className="flex gap-3 p-3">
-                  <Link href={`/pet/${listing.id}`} className="relative size-20 shrink-0">
+                  <Link
+                    href={getPlatform().listingHref(listing.id)}
+                    className="relative size-20 shrink-0 press-feedback active:opacity-70"
+                  >
                     <Image
                       src={petImage(listing)}
                       alt={listing.pet.name}
@@ -71,7 +78,10 @@ export function FavoritesList() {
                   </Link>
 
                   <div className="min-w-0 flex-1">
-                    <Link href={`/pet/${listing.id}`}>
+                    <Link
+                      href={getPlatform().listingHref(listing.id)}
+                      className="block press-feedback active:opacity-70"
+                    >
                       <h3 className="truncate font-semibold text-foreground">{listing.pet.name}</h3>
                     </Link>
                     <p className="truncate text-sm text-muted-foreground">

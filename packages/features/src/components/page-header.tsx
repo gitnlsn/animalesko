@@ -29,7 +29,10 @@ export function PageHeader({ title, subtitle, backTo, actions }: PageHeaderProps
           variant="ghost"
           size="icon"
           aria-label="Voltar"
-          className="shrink-0 text-gradient-foreground hover:bg-gradient-foreground/10 hover:text-gradient-foreground"
+          // The `active:` half is not optional here: on a phone the `hover:`
+          // rules never fire, and the ghost variant's own `active:bg-muted`
+          // would paint a grey box on top of the gradient.
+          className="shrink-0 text-gradient-foreground hover:bg-gradient-foreground/10 hover:text-gradient-foreground active:bg-gradient-foreground/25 active:text-gradient-foreground"
           onClick={() => (backTo ? router.push(backTo) : router.back())}
         >
           <ArrowLeft size={20} />

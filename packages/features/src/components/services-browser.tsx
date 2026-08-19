@@ -1,9 +1,9 @@
 "use client";
 
 import { Card, ListSkeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "@animalesko/ui";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { BookingDialog } from "./booking-dialog.tsx";
 import { ServiceCard } from "./service-card.tsx";
@@ -27,7 +27,30 @@ const TABS: { value: ServiceType; label: string }[] = [
 ];
 
 export function ServicesBrowser() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [booking, setBooking] = useState<PublicOfferingDTO | null>(null);
+
+  /**
+   * Warms the three tabs the user is not looking at.
+   *
+   * Radix unmounts inactive `TabsContent`, so each `ServiceList` runs its query
+   * on first mount — and a tab switch is a tap with no network already in
+   * flight, which lands on a skeleton every time. Prefetching sidesteps that
+   * without touching the tab semantics: the mounted list keeps its own
+   * `useQuery`, the request is deduped against this one, and `staleTime` means
+   * coming back to a tab reads the cache rather than refetching.
+   *
+   * Deliberately after the first paint rather than during it, so the four
+   * requests do not compete with the one the visible tab needs.
+   */
+  useEffect(() => {
+    for (const tab of TABS) {
+      void queryClient.prefetchQuery(
+        trpc.catalog.offerings.queryOptions({ type: tab.value, limit: SERVICES_PAGE_LIMIT }),
+      );
+    }
+  }, [queryClient, trpc]);
 
   return (
     <>

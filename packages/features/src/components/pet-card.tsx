@@ -5,7 +5,7 @@ import { Badge, Button, Card, cn, toast } from "@animalesko/ui";
 import { Clock, Heart, MapPin, Share2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { SEX_LABELS, SIZE_LABELS, petImage } from "../lib/display.ts";
 import { getPlatform } from "../lib/platform.ts";
@@ -22,10 +22,10 @@ import type { PublicListingDTO } from "@animalesko/api";
  * and the location is assembled at render.
  */
 export function PetCard({ listing }: { listing: PublicListingDTO }) {
-  const router = useRouter();
   const favorites = useFavorites();
+  const [sharing, setSharing] = useState(false);
 
-  const href = `/pet/${listing.id}`;
+  const href = getPlatform().listingHref(listing.id);
   const isFavorited = favorites.isListingFavorited(listing.id);
 
   async function share(event: React.MouseEvent) {
@@ -34,24 +34,33 @@ export function PetCard({ listing }: { listing: PublicListingDTO }) {
 
     // Not `window.location.origin`: inside the native WebView that is
     // `capacitor://localhost`, and a shared link has to open the website — which
-    // is also what serves the OpenGraph tags a WhatsApp preview reads.
+    // is also what serves the OpenGraph tags a WhatsApp preview reads. The path
+    // is the site's `/pet/{id}` rather than `href`, because `href` is whatever
+    // route *this* host uses internally and the native one is not on the web.
     const platform = getPlatform();
-    const url = platform.publicUrl(href);
+    const url = platform.publicUrl(`/pet/${listing.id}`);
 
-    // The share sheet is unavailable on desktop browsers and outside secure
-    // contexts, so the clipboard is the fallback rather than an error.
-    if (
-      await platform.share({
-        title: `Conheça ${listing.pet.name}!`,
-        text: `🐾 ${listing.summary}\n\nDisponível para adoção na Animalesko 💚`,
-        url,
-      })
-    ) {
-      return;
+    // Both the sheet and the clipboard are awaited, and on a cold share sheet
+    // that gap is long enough to read as a dropped tap without a pending state.
+    setSharing(true);
+    try {
+      // The share sheet is unavailable on desktop browsers and outside secure
+      // contexts, so the clipboard is the fallback rather than an error.
+      if (
+        await platform.share({
+          title: `Conheça ${listing.pet.name}!`,
+          text: `🐾 ${listing.summary}\n\nDisponível para adoção na Animalesko 💚`,
+          url,
+        })
+      ) {
+        return;
+      }
+
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado! 📋", { description: "Cole o link para compartilhar este pet" });
+    } finally {
+      setSharing(false);
     }
-
-    await navigator.clipboard.writeText(url);
-    toast.success("Link copiado! 📋", { description: "Cole o link para compartilhar este pet" });
   }
 
   return (
@@ -80,20 +89,33 @@ export function PetCard({ listing }: { listing: PublicListingDTO }) {
       </Link>
 
       {/* Outside the Link: a button nested in an anchor is invalid markup and
-          swallows the click on some browsers. */}
+          swallows the click on some browsers.
+
+          The toggle is optimistic, so the fill lands on the same frame as the
+          tap — which is exactly what `transition-smooth` used to throw away by
+          easing it in over 300ms. Until `favoritesResolved` the answer is not
+          known yet, so the heart is dimmed and carries no `aria-pressed` rather
+          than stating "not favourited" and correcting itself a moment later. */}
       <button
         type="button"
-        aria-label={isFavorited ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-        aria-pressed={isFavorited}
+        aria-label={
+          favorites.favoritesResolved
+            ? isFavorited
+              ? "Remover dos favoritos"
+              : "Adicionar aos favoritos"
+            : "Favoritar"
+        }
+        aria-pressed={favorites.favoritesResolved ? isFavorited : undefined}
         onClick={() => favorites.toggleListing(listing.id, href)}
         className={cn(
-          "absolute top-3 right-3 rounded-full p-2 shadow-brand-md transition-smooth",
+          "absolute top-3 right-3 rounded-full p-2 shadow-brand-md press-feedback active:scale-90",
           isFavorited
             ? "bg-secondary text-secondary-foreground"
-            : "bg-card/80 text-muted-foreground backdrop-blur-sm hover:text-secondary",
+            : "bg-card/80 text-muted-foreground backdrop-blur-sm hover:text-secondary active:text-secondary",
+          !favorites.favoritesResolved && "opacity-50",
         )}
       >
-        <Heart size={16} className={cn("transition-smooth", isFavorited && "fill-current")} />
+        <Heart size={16} className={cn(isFavorited && "fill-current")} />
       </button>
 
       <div className="p-4">
@@ -124,12 +146,16 @@ export function PetCard({ listing }: { listing: PublicListingDTO }) {
               variant="ghost"
               className="size-8 p-0"
               aria-label="Compartilhar"
+              loading={sharing}
               onClick={share}
             >
-              <Share2 size={14} />
+              {sharing ? null : <Share2 size={14} />}
             </Button>
-            <Button size="sm" className="text-xs" onClick={() => router.push(href)}>
-              Ver detalhes
+            {/* An anchor rather than `router.push`: the same href the card
+                already links to, so the route is prefetched and the tap is a
+                client transition instead of a cold one. */}
+            <Button asChild size="sm" className="text-xs">
+              <Link href={href}>Ver detalhes</Link>
             </Button>
           </div>
         </div>

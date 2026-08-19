@@ -57,7 +57,12 @@ function StarRating({
             aria-checked={value === star}
             aria-label={`${star} ${star === 1 ? "estrela" : "estrelas"}`}
             onClick={() => onChange(star)}
-            className="transition-smooth hover:scale-110"
+            // `hover:scale-110` is inert on a touch screen and the 300ms
+            // `transition-smooth` it rode on animated nothing a finger could
+            // see. The press is what needs answering, and `press-feedback`
+            // lands it on the frame of the tap. The fill is already instant —
+            // it comes from `value`, not from a transition.
+            className="press-feedback hover:scale-110 active:scale-125"
           >
             {icon}
           </button>

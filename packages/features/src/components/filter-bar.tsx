@@ -21,6 +21,13 @@ import { SEX_LABELS, SIZE_LABELS, SPECIES_LABELS } from "../lib/display.ts";
 const ANY = "all";
 
 /**
+ * One radio row. The negative margin cancels the padding, so the row grows into
+ * a 36px tap target and a full-width pressed background without shifting the
+ * dots away from the legend they sit under.
+ */
+const ROW = "-mx-2 flex items-center gap-2 rounded-lg px-2 py-2 press-feedback active:bg-muted";
+
+/**
  * Filters written to the URL rather than held in component state.
  *
  * The prototype kept `species`, `size`, `gender` and `ages` in `useState` and
@@ -114,14 +121,21 @@ export function FilterBar() {
                   value={draft[group.key] ?? ANY}
                   onValueChange={(value) => setDraft({ ...draft, [group.key]: value })}
                 >
-                  <div className="flex items-center gap-2">
+                  {/* The row, not just the 16px dot, is what a finger lands on:
+                      the `<Label htmlFor>` forwards the tap, so without a
+                      pressed state here most of the target answers nothing. */}
+                  <div className={ROW}>
                     <RadioGroupItem value={ANY} id={`${group.key}-all`} />
-                    <Label htmlFor={`${group.key}-all`}>Todos</Label>
+                    <Label htmlFor={`${group.key}-all`} className="flex-1">
+                      Todos
+                    </Label>
                   </div>
                   {Object.entries(group.options).map(([value, label]) => (
-                    <div key={value} className="flex items-center gap-2">
+                    <div key={value} className={ROW}>
                       <RadioGroupItem value={value} id={`${group.key}-${value}`} />
-                      <Label htmlFor={`${group.key}-${value}`}>{label}</Label>
+                      <Label htmlFor={`${group.key}-${value}`} className="flex-1">
+                        {label}
+                      </Label>
                     </div>
                   ))}
                 </RadioGroup>

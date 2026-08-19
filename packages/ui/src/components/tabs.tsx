@@ -27,7 +27,10 @@ export function TabsTrigger({
     <TabsPrimitive.Trigger
       className={cn(
         "inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap",
-        "transition-colors disabled:pointer-events-none disabled:opacity-50",
+        "press-feedback disabled:pointer-events-none disabled:opacity-50",
+        // Scoped to the inactive state so pressing the tab that is already
+        // selected cannot momentarily wash out its own background.
+        "data-[state=inactive]:active:bg-background/60",
         "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-brand-sm",
         className,
       )}

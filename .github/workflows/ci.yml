@@ -142,3 +142,44 @@ jobs:
       # need the client) and never `db:seed` — the seed writes demo accounts
       # with a known password.
       - run: pnpm db:deploy
+
+  # Brings `dev` back up to `main` once a deploy has actually succeeded.
+  #
+  # Every branch is cut from `dev`, so `dev` falling behind `main` means each new
+  # branch inherits conflicts that were already resolved once on the way to
+  # release. Doing it here rather than on a schedule ties the refresh to the
+  # event that makes it necessary — `main` moved and shipped — so the trunk
+  # people branch from is never more than one deploy old.
+  #
+  # `needs: migrate` is the point: a deploy that failed its migration is not a
+  # deploy, and propagating that commit into `dev` would spread a state
+  # production never accepted.
+  sync-dev:
+    needs: migrate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    # Queue rather than cancel, for the same reason `migrate` does: two deploys
+    # landing together should produce two merges in order, not one interrupted
+    # push that leaves `dev` half-updated.
+    concurrency:
+      group: sync-dev
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: dev
+          # Full history: a shallow clone has no merge base, so the merge below
+          # would fail on unrelated histories rather than fast-forward.
+          fetch-depth: 0
+
+      - name: Merge main into dev
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git merge --no-edit origin/main
+          git push origin dev

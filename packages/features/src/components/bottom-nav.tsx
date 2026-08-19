@@ -4,6 +4,7 @@ import { cn } from "@animalesko/ui";
 import { Calendar, Heart, Home, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 /**
  * The four tabs are routes now, not `activeTab` state.
@@ -44,6 +45,26 @@ function stripTrailingSlash(path: string | null): string {
 export function BottomNav() {
   const pathname = usePathname();
 
+  /**
+   * The pill follows the finger, not the router.
+   *
+   * A tab change is a route transition that fetches, so `usePathname()` keeps
+   * reporting the *previous* tab for its whole duration — on a phone that is
+   * long enough for the highlight to stay put and the tap to read as ignored,
+   * on the four controls that are pressed more than anything else in the app.
+   * The tapped href is recorded here and painted immediately.
+   *
+   * The pathname it was tapped *from* is stored alongside it, which is what
+   * lets the guess expire without an effect: the moment the router reports any
+   * other pathname the promise is spent, whether it arrived where the finger
+   * pointed or somewhere else entirely through a back gesture. Clearing it from
+   * an effect instead would mean setting state during a commit purely to
+   * describe something `pathname` already says.
+   */
+  const [pending, setPending] = useState<{ href: string; from: string } | null>(null);
+
+  const pendingHref = pending?.from === (pathname ?? "") ? pending.href : null;
+
   return (
     <nav
       aria-label="Navegação principal"
@@ -52,25 +73,29 @@ export function BottomNav() {
       <div className="mx-auto flex max-w-md items-center justify-around px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {TABS.map((tab) => {
           const Icon = tab.icon;
-          const isActive = isActiveTab(pathname, tab.href);
+          // `aria-current` stays on the real pathname: the pill is a promise
+          // about where the tap is going, "current page" is a statement of fact.
+          const isCurrent = isActiveTab(pathname, tab.href);
+          const isActive = isActiveTab(pendingHref ?? pathname, tab.href);
 
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              aria-current={isActive ? "page" : undefined}
+              aria-current={isCurrent ? "page" : undefined}
+              onClick={() => setPending({ href: tab.href, from: pathname ?? "" })}
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 py-2 transition-smooth active:opacity-80",
+                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 py-2 press-feedback active:opacity-70",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-primary",
               )}
             >
               <span
                 className={cn(
-                  "flex h-7 w-14 items-center justify-center rounded-full transition-smooth",
+                  "flex h-7 w-14 items-center justify-center rounded-full press-feedback active:scale-90",
                   isActive ? "bg-primary-light" : "active:bg-muted",
                 )}
               >
-                <Icon size={20} className="transition-smooth" />
+                <Icon size={20} />
               </span>
               <span className="truncate text-xs font-medium">{tab.label}</span>
             </Link>

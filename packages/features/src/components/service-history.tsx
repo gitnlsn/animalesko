@@ -28,7 +28,7 @@ import {
   toast,
 } from "@animalesko/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, CreditCard, MapPin, Star, X } from "lucide-react";
+import { Calendar, CreditCard, Loader2, MapPin, Star, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -37,6 +37,7 @@ import { HISTORY_BOOKINGS_LIMIT } from "../lib/query-inputs.ts";
 import { useTRPC } from "../trpc.ts";
 
 import type { BookingDTO } from "@animalesko/api";
+import type { ComponentProps } from "react";
 
 const STATUS_VARIANT: Record<
   BookingStatus,
@@ -72,8 +73,13 @@ export function ServiceHistory() {
           ))}
         </TabsList>
 
+        {/* `forceMount` because Radix unmounts the inactive tabs, which took
+            each list's query down with them — so the first tap on every tab
+            replaced the list with a full-height skeleton for a round trip. The
+            hidden lists mount once, alongside "Todos", and every switch after
+            that is instant. */}
         {TABS.map((tab) => (
-          <TabsContent key={tab.value} value={tab.value}>
+          <TabsContent key={tab.value} value={tab.value} forceMount>
             <BookingList status={tab.status} onCancel={setPendingCancel} />
           </TabsContent>
         ))}
@@ -111,9 +117,9 @@ function BookingList({
           <p className="text-sm text-muted-foreground">
             Seus agendamentos aparecem nesta lista assim que você marcar o primeiro.
           </p>
-          <Button asChild className="mt-2">
-            <Link href="/servicos">Ver serviços</Link>
-          </Button>
+          <NavButton href="/servicos" className="mt-2">
+            Ver serviços
+          </NavButton>
         </CardContent>
       </Card>
     );
@@ -200,21 +206,17 @@ function BookingCard({
 
         <div className="flex flex-wrap gap-2">
           {needsPayment && booking.status !== "CANCELLED" ? (
-            <Button asChild size="sm">
-              <Link href={`/pagamento?agendamento=${booking.id}`}>
-                <CreditCard size={14} />
-                Pagar
-              </Link>
-            </Button>
+            <NavButton href={`/pagamento?agendamento=${booking.id}`} size="sm">
+              <CreditCard size={14} />
+              Pagar
+            </NavButton>
           ) : null}
 
           {reviewable ? (
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/avaliacoes?agendamento=${booking.id}`}>
-                <Star size={14} />
-                Avaliar
-              </Link>
-            </Button>
+            <NavButton href={`/avaliacoes?agendamento=${booking.id}`} size="sm" variant="outline">
+              <Star size={14} />
+              Avaliar
+            </NavButton>
           ) : null}
 
           {booking.review ? (
@@ -238,6 +240,31 @@ function BookingCard({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * A link that admits it was tapped.
+ *
+ * `Button` presses instantly, but every destination here is another route with
+ * its own query behind it, so the press lands and then nothing moves for as
+ * long as that takes. `loading` dims the control and marks it busy for that
+ * gap, and incidentally stops a second tap pushing the same route twice. The
+ * flag never needs clearing: the transition unmounts this card.
+ */
+function NavButton({
+  href,
+  children,
+  ...props
+}: Omit<ComponentProps<typeof Button>, "asChild" | "loading"> & { href: string }) {
+  const [navigating, setNavigating] = useState(false);
+
+  return (
+    <Button asChild loading={navigating} {...props}>
+      <Link href={href} onClick={() => setNavigating(true)}>
+        {children}
+      </Link>
+    </Button>
   );
 }
 
@@ -267,14 +294,20 @@ function CancelDialog({ booking, onClose }: { booking: BookingDTO | null; onClos
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Manter agendamento</AlertDialogCancel>
+          {/* `preventDefault` holds the dialog open until the server answers,
+              which without a pending state left a live "Cancelar" under the
+              finger: a second tap fired a second cancellation. */}
           <AlertDialogAction
-            className="bg-destructive hover:bg-destructive/90"
+            className="bg-destructive hover:bg-destructive/90 active:bg-destructive/80"
+            disabled={cancelBooking.isPending}
+            aria-busy={cancelBooking.isPending || undefined}
             onClick={(event) => {
               event.preventDefault();
               if (booking) cancelBooking.mutate({ id: booking.id });
             }}
           >
-            Cancelar
+            {cancelBooking.isPending ? <Loader2 className="animate-spin" aria-hidden /> : null}
+            {cancelBooking.isPending ? "Cancelando…" : "Cancelar"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

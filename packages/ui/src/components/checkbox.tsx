@@ -13,7 +13,10 @@ export function Checkbox({
   return (
     <CheckboxPrimitive.Root
       className={cn(
-        "peer size-4 shrink-0 rounded-sm border border-input transition-colors",
+        "peer size-4 shrink-0 rounded-sm border border-input press-feedback",
+        // The pressed state is a halo rather than a fill: at 16px a background
+        // swap is both invisible and in a fight with the checked background.
+        "active:border-primary active:ring-4 active:ring-primary/20",
         "disabled:cursor-not-allowed disabled:opacity-50",
         "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
         className,

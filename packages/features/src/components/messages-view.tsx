@@ -28,6 +28,25 @@ import { useTRPC } from "../trpc.ts";
 const THREAD_POLL_MS = 5_000;
 
 /**
+ * Shared by the thread's own query and the prefetch the list fires on tap. A
+ * tRPC key is derived from its input, so the two have to be the same value or
+ * the prefetched entry is written under a key nothing ever reads.
+ */
+const THREAD_MESSAGE_LIMIT = 100;
+
+/**
+ * Marks a bubble that exists only in the cache so far.
+ *
+ * The row the server will return has a real cuid, so nothing it sends can
+ * collide with this, and the id is the only place to carry the flag: the cache
+ * holds `MessageDTO[]` and an extra field on one entry would not type.
+ */
+const OPTIMISTIC_PREFIX = "optimistic:";
+
+/** Monotonic, so two sends in the same millisecond cannot share a React key. */
+let optimisticSeq = 0;
+
+/**
  * The inbox and one thread.
  *
  * The prototype held two hardcoded conversations and five hardcoded messages in
@@ -39,6 +58,8 @@ const THREAD_POLL_MS = 5_000;
  * that would go.
  */
 export function MessagesView() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const router = useRouter();
   const active = searchParams.get("conversa");
@@ -46,7 +67,18 @@ export function MessagesView() {
   return active ? (
     <Thread conversationId={active} onBack={() => router.push("/mensagens")} />
   ) : (
-    <ConversationList onOpen={(id) => router.push(`/mensagens?conversa=${id}`)} />
+    <ConversationList
+      onOpen={(id) => {
+        // Opening a conversation is a route change, so this list unmounts and
+        // the thread mounts with nothing — the request only starts once the
+        // screen the reader is waiting on is already on screen. Starting it on
+        // the tap buys back the whole navigation.
+        void queryClient.prefetchQuery(
+          trpc.message.thread.queryOptions({ conversationId: id, limit: THREAD_MESSAGE_LIMIT }),
+        );
+        router.push(`/mensagens?conversa=${id}`);
+      }}
+    />
   );
 }
 
@@ -86,7 +118,9 @@ function ConversationList({ onOpen }: { onOpen: (id: string) => void }) {
             <button
               type="button"
               onClick={() => onOpen(conversation.id)}
-              className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:bg-muted/50"
+              // The inbox's primary control, and `hover:` was all it had:
+              // nothing at all answered the finger on a device.
+              className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3 text-left press-feedback hover:bg-muted/50 active:scale-[0.99] active:bg-muted"
             >
               <Avatar className="size-12 shrink-0">
                 <AvatarFallback className="bg-gradient-primary text-gradient-foreground">
@@ -122,26 +156,74 @@ function ConversationList({ onOpen }: { onOpen: (id: string) => void }) {
 function Thread({ conversationId, onBack }: { conversationId: string; onBack: () => void }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { userId } = useSession();
+  const { userId, name } = useSession();
   const [draft, setDraft] = useState("");
+  const [locating, setLocating] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const thread = useQuery({
-    ...trpc.message.thread.queryOptions({ conversationId, limit: 100 }),
-    refetchInterval: THREAD_POLL_MS,
+  const threadKey = trpc.message.thread.queryKey({
+    conversationId,
+    limit: THREAD_MESSAGE_LIMIT,
   });
 
   const markRead = useMutation(trpc.message.markRead.mutationOptions());
 
+  /**
+   * Sending, answered on the same frame as the tap.
+   *
+   * The bubble used to appear only after the round trip, the invalidate and the
+   * refetch, with the text still sitting in the composer the whole time — which
+   * on a phone reads as a send that did not happen, so people send it again.
+   * The server is still the authority: `onSettled` refetches either way, and a
+   * failure puts both the bubble and the draft back.
+   */
   const send = useMutation(
     trpc.message.send.mutationOptions({
-      onSuccess: async () => {
-        setDraft("");
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries({ queryKey: threadKey });
+
+        const previousMessages = queryClient.getQueryData(threadKey);
+        const previousDraft = draft;
+
+        if (variables.body) setDraft("");
+
+        queryClient.setQueryData(threadKey, (current) => [
+          ...(current ?? []),
+          {
+            id: `${OPTIMISTIC_PREFIX}${++optimisticSeq}`,
+            body: variables.body ?? null,
+            imageUrl: variables.imageUrl ?? null,
+            latitude: variables.latitude ?? null,
+            longitude: variables.longitude ?? null,
+            createdAt: new Date(),
+            sender: { id: userId ?? "", name: name ?? "", image: null },
+          },
+        ]);
+
+        // Returned rather than kept in a ref: whatever `onMutate` gives back
+        // reaches `onError` as this call's context, so two sends in flight
+        // each carry their own undo instead of sharing one slot.
+        return () => {
+          queryClient.setQueryData(threadKey, previousMessages);
+          if (variables.body) setDraft(previousDraft);
+        };
+      },
+      onError: (error, _variables, rollback) => {
+        rollback?.();
+        toast.error(error.message);
+      },
+      onSettled: async () => {
         await queryClient.invalidateQueries({ queryKey: trpc.message.pathKey() });
       },
-      onError: (error) => toast.error(error.message),
     }),
   );
+
+  const thread = useQuery({
+    ...trpc.message.thread.queryOptions({ conversationId, limit: THREAD_MESSAGE_LIMIT }),
+    // A poll landing mid-send returns a thread that does not contain the
+    // optimistic bubble yet, which would blink the message out and back in.
+    refetchInterval: send.isPending ? false : THREAD_POLL_MS,
+  });
 
   // Opening a thread is reading it. Fired once per thread rather than on every
   // poll, which would be a write every five seconds.
@@ -180,6 +262,7 @@ function Thread({ conversationId, onBack }: { conversationId: string; onBack: ()
           <ul className="space-y-3">
             {messages.map((message) => {
               const mine = message.sender.id === userId;
+              const sending = message.id.startsWith(OPTIMISTIC_PREFIX);
 
               return (
                 <li key={message.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
@@ -189,7 +272,9 @@ function Thread({ conversationId, onBack }: { conversationId: string; onBack: ()
                       mine
                         ? "rounded-br-sm bg-primary text-primary-foreground"
                         : "rounded-bl-sm bg-muted text-foreground",
+                      sending && "opacity-70",
                     )}
+                    aria-busy={sending || undefined}
                   >
                     {!mine ? (
                       <p className="mb-0.5 text-xs font-medium opacity-70">{message.sender.name}</p>
@@ -202,25 +287,31 @@ function Thread({ conversationId, onBack }: { conversationId: string; onBack: ()
                         href={`https://www.openstreetmap.org/?mlat=${message.latitude}&mlon=${message.longitude}#map=16/${message.latitude}/${message.longitude}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-1 flex items-center gap-1 text-xs underline"
+                        className="mt-1 flex items-center gap-1 text-xs underline press-feedback active:opacity-60"
                       >
                         <MapPin size={12} />
                         Ver localização
                       </a>
                     ) : null}
 
-                    <time
-                      dateTime={message.createdAt.toISOString()}
-                      className="mt-1 block text-right text-[0.65rem] opacity-60"
-                    >
-                      {/* Pinned to the venue timezone so a device set to a
-                          different timezone doesn't shift the hour shown. */}
-                      {new Intl.DateTimeFormat("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone: "America/Sao_Paulo",
-                      }).format(message.createdAt)}
-                    </time>
+                    {sending ? (
+                      <span className="mt-1 block text-right text-[0.65rem] opacity-60">
+                        Enviando…
+                      </span>
+                    ) : (
+                      <time
+                        dateTime={message.createdAt.toISOString()}
+                        className="mt-1 block text-right text-[0.65rem] opacity-60"
+                      >
+                        {/* Pinned to the venue timezone so a device set to a
+                            different timezone doesn't shift the hour shown. */}
+                        {new Intl.DateTimeFormat("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone: "America/Sao_Paulo",
+                        }).format(message.createdAt)}
+                      </time>
+                    )}
                   </div>
                 </li>
               );
@@ -244,32 +335,46 @@ function Thread({ conversationId, onBack }: { conversationId: string; onBack: ()
           placeholder="Escreva uma mensagem…"
           aria-label="Mensagem"
         />
+        {/* Its own flag, and not the send button's. Acquiring a fix takes
+            seconds and happens *before* the mutation exists, so `send.isPending`
+            is false for the whole wait — while also spinning this button every
+            time a plain text message was sent. */}
         <Button
           type="button"
           variant="outline"
           size="icon"
           aria-label="Enviar localização"
-          loading={send.isPending}
+          loading={locating}
           onClick={() => {
             if (!navigator.geolocation) {
               toast.error("Seu navegador não expõe localização.");
               return;
             }
 
+            setLocating(true);
             navigator.geolocation.getCurrentPosition(
               (position) =>
-                send.mutate({
-                  conversationId,
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude,
-                }),
-              () => toast.error("Não foi possível obter sua localização."),
+                send.mutate(
+                  {
+                    conversationId,
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                  },
+                  { onSettled: () => setLocating(false) },
+                ),
+              () => {
+                setLocating(false);
+                toast.error("Não foi possível obter sua localização.");
+              },
             );
           }}
         >
-          <MapPin size={16} />
+          {locating ? null : <MapPin size={16} />}
         </Button>
-        <Button type="submit" size="icon" aria-label="Enviar" loading={send.isPending}>
+        {/* No `loading` here: the pending bubble is the feedback, and blocking
+            the button would stop the next message being written while the last
+            one is still in flight. */}
+        <Button type="submit" size="icon" aria-label="Enviar">
           <Send size={16} />
         </Button>
       </form>

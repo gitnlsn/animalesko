@@ -359,10 +359,13 @@
 }
 
 /*
- * The prototype's `transition-smooth` / `transition-bounce`, which were
- * `all .3s <easing>`. Kept as-is rather than rewritten to per-property
- * transitions at ~30 call sites; `transition-all` is acceptable here because
- * these are small cards and buttons, not layout-bearing containers.
+ * The prototype's `transition-smooth` / `transition-bounce`, `all .3s <easing>`.
+ *
+ * These are for decoration only — a card's shadow, an image zoom, anything a
+ * finger does not land on. Putting either on a tap target is what made the app
+ * feel unresponsive: a tap lasts around 100ms, so an `active:` state easing in
+ * over 300ms is still mostly transparent when the finger lifts, and the press
+ * reads as ignored. Tap targets use `press-feedback` below.
  */
 @utility transition-smooth {
   transition: all 0.3s var(--ease-smooth);
@@ -370,6 +373,33 @@
 
 @utility transition-bounce {
   transition: all 0.3s var(--ease-bounce);
+}
+
+/*
+ * Press feedback that answers the finger immediately.
+ *
+ * The asymmetry is the whole point. Releasing eases back over 200ms, but
+ * pressing lands instantly because `:active` zeroes the duration. A symmetric
+ * transition has to choose between a press that arrives too late to be seen and
+ * a release that snaps, and on a touch device the press is the half carrying
+ * the information — it is the app's answer to "did you get that?".
+ *
+ * Properties are listed individually rather than using `all` so that a
+ * layout-affecting change — a card growing as its data lands — is never
+ * animated by accident.
+ */
+@utility press-feedback {
+  transition:
+    background-color 0.2s var(--ease-smooth),
+    border-color 0.2s var(--ease-smooth),
+    color 0.2s var(--ease-smooth),
+    opacity 0.2s var(--ease-smooth),
+    box-shadow 0.2s var(--ease-smooth),
+    transform 0.2s var(--ease-smooth);
+
+  &:active {
+    transition-duration: 0s;
+  }
 }
 
 @layer base {
@@ -387,5 +417,31 @@
   :focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
+  }
+
+  /*
+   * Touch behaviour, which only matters in the two WebView builds.
+   *
+   * Chromium paints its own translucent grey rectangle on tap. It fires on a
+   * different schedule than the element's own `active:` state, so the user sees
+   * two separate responses to one tap and the later one reads as lag.
+   *
+   * `touch-action: manipulation` drops the ~300ms the browser would otherwise
+   * spend waiting to see whether a second tap is coming. The viewport is
+   * already declared `user-scalable=false`, so nothing is lost by refusing
+   * double-tap zoom explicitly, and every click handler in the app fires a
+   * third of a second sooner.
+   */
+  a,
+  button,
+  label,
+  summary,
+  [role="button"],
+  [role="tab"],
+  [role="radio"],
+  [role="option"],
+  [role="menuitem"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 }

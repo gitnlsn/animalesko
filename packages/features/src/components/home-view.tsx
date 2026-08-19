@@ -1,12 +1,12 @@
 "use client";
 
-import { Button, Card, Skeleton } from "@animalesko/ui";
+import { Button, Card, PetCardSkeleton, Skeleton, StatGridSkeleton } from "@animalesko/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, Heart } from "lucide-react";
 import Link from "next/link";
 
 import { PetCard } from "./pet-card.tsx";
-import { PetOfTheDay } from "./pet-of-the-day.tsx";
+import { PetOfTheDay, PetOfTheDaySkeleton } from "./pet-of-the-day.tsx";
 import { StatsCard } from "./stats-card.tsx";
 import { HOME_RECENT_LISTINGS_INPUT } from "../lib/query-inputs.ts";
 import { useTRPC } from "../trpc.ts";
@@ -30,7 +30,7 @@ export function HomeView() {
   return (
     <div className="space-y-6">
       {petOfTheDay.isPending ? (
-        <Skeleton className="h-64 w-full rounded-2xl" />
+        <PetOfTheDaySkeleton />
       ) : petOfTheDay.data ? (
         <PetOfTheDay listing={petOfTheDay.data} />
       ) : null}
@@ -53,20 +53,26 @@ export function HomeView() {
         </Button>
       </section>
 
-      <div className="grid grid-cols-2 gap-4">
-        <StatsCard
-          title="Pets adotados"
-          value={stats.data?.adoptedThisMonth ?? 0}
-          subtitle="Este mês"
-          icon={Heart}
-        />
-        <StatsCard
-          title="Serviços"
-          value={stats.data?.bookingsThisMonth ?? 0}
-          subtitle="Agendamentos este mês"
-          icon={Calendar}
-        />
-      </div>
+      {/* `?? 0` would paint a confident "0 pets adotados" for the length of the
+          request and then correct itself. An unknown count is not zero. */}
+      {stats.isPending ? (
+        <StatGridSkeleton count={2} detailed className="gap-4" />
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          <StatsCard
+            title="Pets adotados"
+            value={stats.data?.adoptedThisMonth ?? 0}
+            subtitle="Este mês"
+            icon={Heart}
+          />
+          <StatsCard
+            title="Serviços"
+            value={stats.data?.bookingsThisMonth ?? 0}
+            subtitle="Agendamentos este mês"
+            icon={Calendar}
+          />
+        </div>
+      )}
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">Ações rápidas</h2>
@@ -95,9 +101,12 @@ export function HomeView() {
         </div>
 
         {recent.isPending ? (
+          // `PetCardSkeleton` rather than an `h-72` block: a `PetCard` is a
+          // 4:3 photo plus its body, well over 288px at this width, so the flat
+          // rectangle was buying a second layout jump with the first.
           <div className="space-y-4">
-            <Skeleton className="h-72 w-full rounded-2xl" />
-            <Skeleton className="h-72 w-full rounded-2xl" />
+            <PetCardSkeleton />
+            <PetCardSkeleton />
           </div>
         ) : (recent.data?.length ?? 0) === 0 ? (
           <Card className="p-8 text-center">
