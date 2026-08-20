@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "~/components/app-header.tsx";
 import { MobileNav, SidebarNav } from "~/components/sidebar-nav.tsx";
 import { PlusProvider, type ActiveOrg } from "~/lib/org-context.tsx";
+import { DEFAULT_SIGNED_IN_ROUTE, safeNext } from "~/lib/safe-next.ts";
 
 /**
  * The provider chrome: header over a sidebar-and-content pair, `max-w-7xl`.
@@ -20,10 +21,20 @@ import { PlusProvider, type ActiveOrg } from "~/lib/org-context.tsx";
  * explanation, not a FORBIDDEN from tRPC.
  */
 export default async function ShellLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const requestHeaders = await headers();
+  const session = await auth.api.getSession({ headers: requestHeaders });
 
   if (!session?.user) {
-    redirect("/entrar");
+    // Carry the destination through the login form. Without it, a provider
+    // opening a shared `/agenda?status=PENDING` link signed out arrived at the
+    // dashboard instead, with no trace of where they had been going.
+    const requested = safeNext(requestHeaders.get("x-pathname"));
+
+    redirect(
+      requested === DEFAULT_SIGNED_IN_ROUTE
+        ? "/entrar"
+        : `/entrar?next=${encodeURIComponent(requested)}`,
+    );
   }
 
   const memberships = session.organizations ?? [];

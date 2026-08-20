@@ -33,6 +33,23 @@ const ITEMS = [
   { href: "/organizacao", label: "Organização", icon: Building2 },
 ] as const;
 
+/**
+ * Whether `href` is the section the current URL belongs to.
+ *
+ * A plain `pathname === href` matched only the section index, so opening
+ * `/animais/<id>` or `/adocao/<id>` — the two routes that have children — left
+ * every item unhighlighted and dropped `aria-current` entirely, and the panel
+ * stopped saying where you were. A detail page is still inside its section.
+ *
+ * `/` is exact, or it would be the ancestor of every route and always active.
+ */
+export function isActiveSection(pathname: string | null, href: string): boolean {
+  if (!pathname) return false;
+  if (href === "/") return pathname === "/";
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 function useVisibleItems() {
   const { org } = usePlus();
 
@@ -51,7 +68,7 @@ export function SidebarNav() {
         <ul className="space-y-1">
           {items.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = isActiveSection(pathname, item.href);
 
             return (
               <li key={item.href}>
@@ -88,7 +105,7 @@ export function MobileNav() {
         <ul className="flex gap-2">
           {items.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = isActiveSection(pathname, item.href);
 
             return (
               <li key={item.href}>

@@ -53,26 +53,34 @@ export function SignInForm({ next }: { next: string }) {
 
     setPending(true);
 
-    const result =
-      mode === "signin"
-        ? await signIn.email({ email: values.email, password: values.password })
-        : await signUp.email({
-            name: values.name ?? "",
-            email: values.email,
-            password: values.password,
-          });
+    try {
+      const result =
+        mode === "signin"
+          ? await signIn.email({ email: values.email, password: values.password })
+          : await signUp.email({
+              name: values.name ?? "",
+              email: values.email,
+              password: values.password,
+            });
 
-    setPending(false);
+      if (result.error) {
+        toast.error(result.error.message ?? "Não foi possível entrar.");
+        return;
+      }
 
-    if (result.error) {
-      toast.error(result.error.message ?? "Não foi possível entrar.");
-      return;
+      // refresh() re-runs the server component that reads the session, so the
+      // new cookie is picked up before navigating.
+      router.refresh();
+      router.push(next);
+    } catch {
+      // A rejection, not a `result.error`: the client only returns one once it
+      // has a response, so anything that stops the request reaching the server
+      // throws out of here instead. Left uncaught it skipped the reset below,
+      // and the button spun forever without ever saying what went wrong.
+      toast.error("Não foi possível conectar. Verifique sua conexão e tente novamente.");
+    } finally {
+      setPending(false);
     }
-
-    // refresh() re-runs the server component that reads the session, so the
-    // new cookie is picked up before navigating.
-    router.refresh();
-    router.push(next);
   }
 
   return (

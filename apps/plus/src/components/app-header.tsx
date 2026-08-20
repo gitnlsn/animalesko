@@ -24,6 +24,7 @@ import {
   CheckCheck,
   Dog,
   ExternalLink,
+  LayoutDashboard,
   LogOut,
   PawPrint,
   Settings,
@@ -139,6 +140,15 @@ function LogoMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
+        {/* The wordmark opens this menu instead of linking home, so without a
+            Painel entry the header offered no route back to the dashboard at
+            all — only the sidebar did, and that is hidden below `lg`. */}
+        <DropdownMenuItem asChild>
+          <Link href="/">
+            <LayoutDashboard size={16} />
+            Painel
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/agenda">
             <CalendarDays size={16} />
