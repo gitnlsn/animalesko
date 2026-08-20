@@ -16,7 +16,7 @@ import {
   toast,
 } from "@animalesko/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MapPin, MessageCircle, Send } from "lucide-react";
+import { MapPin, MessageCircle, Send } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -44,7 +44,7 @@ export function MessagesView() {
   const active = searchParams.get("conversa");
 
   return active ? (
-    <Thread conversationId={active} onBack={() => router.push("/mensagens")} />
+    <Thread conversationId={active} />
   ) : (
     <ConversationList onOpen={(id) => router.push(`/mensagens?conversa=${id}`)} />
   );
@@ -119,7 +119,7 @@ function ConversationList({ onOpen }: { onOpen: (id: string) => void }) {
   );
 }
 
-function Thread({ conversationId, onBack }: { conversationId: string; onBack: () => void }) {
+function Thread({ conversationId }: { conversationId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { userId } = useSession();
@@ -164,11 +164,6 @@ function Thread({ conversationId, onBack }: { conversationId: string; onBack: ()
     // reports keeps the last message and the text field on screen without
     // needing to know which platform is asking.
     <div className="flex h-[calc(100dvh-8rem-env(safe-area-inset-bottom))] flex-col">
-      <Button variant="ghost" size="sm" className="mb-2 self-start" onClick={onBack}>
-        <ArrowLeft size={16} />
-        Todas as conversas
-      </Button>
-
       <ScrollArea className="flex-1 rounded-xl border bg-card p-3">
         {thread.isPending ? (
           <ThreadSkeleton />

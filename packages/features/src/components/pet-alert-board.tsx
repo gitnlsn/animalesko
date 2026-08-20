@@ -40,7 +40,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Eye, MapPin, Phone, Plus, Siren } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -72,6 +72,31 @@ export function PetAlertBoard() {
   const [species, setSpecies] = useState<Species | "all">("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [selected, setSelected] = useState<AlertDTO | null>(null);
+
+  // A sighting notification links to `/pet-alert?alerta=<id>`, which until now
+  // landed on the generic board: nothing read the parameter, so the tutor was
+  // told their pet had been seen and then had to find the alert by hand.
+  //
+  // It is fetched by id rather than looked up in `items`, because that list is
+  // bounded by the visitor's own radius and species filter — the tutor being
+  // notified is routinely nowhere near the sighting, so the one alert they were
+  // sent here for is precisely the one the feed is most likely to omit.
+  const deepLinkedId = useSearchParams().get("alerta");
+  const [dismissedDeepLink, setDismissedDeepLink] = useState(false);
+
+  const deepLinked = useQuery({
+    ...trpc.alert.byId.queryOptions({ id: deepLinkedId ?? "" }),
+    enabled: Boolean(deepLinkedId),
+    // A stale or hand-edited id is a normal outcome, not an error worth
+    // interrupting for: the board behind the dialog is still entirely usable.
+    retry: false,
+  });
+
+  // Derived rather than copied into state by an effect, which would cascade a
+  // render and could not express "opened, then dismissed" without a second flag
+  // racing the first. An explicit pick always wins over the link that brought
+  // the visitor here, and closing the dialog retires the link for good.
+  const showing = selected ?? (dismissedDeepLink ? null : (deepLinked.data ?? null));
 
   // Asked for once, on mount. Denying it — or having no Geolocation API at all
   // — is a normal outcome rather than an error: the board still works, centred
@@ -173,8 +198,11 @@ export function PetAlertBoard() {
       <CreateAlertDialog open={createOpen} onOpenChange={setCreateOpen} center={center} />
 
       <AlertDetailsDialog
-        alert={selected}
-        onClose={() => setSelected(null)}
+        alert={showing}
+        onClose={() => {
+          setSelected(null);
+          setDismissedDeepLink(true);
+        }}
         requireSignIn={requireSignIn}
       />
     </>

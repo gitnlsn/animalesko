@@ -13,6 +13,7 @@
     "./use-favorites": "./src/lib/use-favorites.ts",
     "./platform": "./src/lib/platform.ts",
     "./query-inputs": "./src/lib/query-inputs.ts",
+    "./safe-next": "./src/lib/safe-next.ts",
     "./*": "./src/components/*.tsx"
   },
   "scripts": {
